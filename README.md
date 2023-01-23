@@ -24,7 +24,9 @@
   "aws_s3_role_arn": "[AWS_ROLE_ARN_WITH_ACCESS_TO_S3_AND_REKOGNITION"
 }
 ```
-2. Login to Telegram and get groups by running: `python3 -m telegram_api -g` the result is saved to a `groups.json` file in the current folder
+Make sure the folders `messages` and `media` are created in a level above of this README file.
+
+2. Login to Telegram (will need input of received text code inside telegram channel in the app) and get groups by running: `python3 -m telegram_api -g` the result is saved to a `groups.json` file in the current folder
 3. Login to Telegram and get messages from groups specified in a JSON file with the format:
 ```json
 [
