@@ -4,7 +4,7 @@ import saver
 import media_analyser
 import traceback
 # importing all required libraries
-from telethon.sync import TelegramClient
+#from telethon.sync import TelegramClient
 from telethon.tl.types import InputPeerUser, InputPeerChannel
 from telethon import TelegramClient, sync, events
 import s3_operations
@@ -17,6 +17,7 @@ OUTPUT_DATA_BUCKET_NAME = os.getenv("OUTPUT_DATA_BUCKET_NAME", "telegram-output-
 OUTPUT_FOLDER_NAME = os.getenv("OUTPUT_FOLDER_NAME", "../media/")
 OUTPUT_FOLDER_MESSAGES = os.getenv("OUTPUT_FOLDER_MESSAGES", "../messages/")
 GROUP_FILE_NAME = os.getenv("GROUP_FILE_NAME", "groups.json")
+CREDENTIALS_FILE = os.getenv("CREDENTIALS_FILE", "creds.json")
 
 def date_format(message):
     """
@@ -29,7 +30,7 @@ def date_format(message):
 
 
 # Use your own values from my.telegram.org
-with open("creds.json", 'r') as f:
+with open(CREDENTIALS_FILE, 'r') as f:
     creds = json.loads(f.read())
     api_id = int(creds["api_id"])
     api_hash = creds["api_hash"]
@@ -125,7 +126,7 @@ class TelegramAPI:
         print("Saved %s groups in %s" % (len(groups_obj), saved_file_name))
         return groups_obj
 
-    def get_messages(self, client, channel_id, limit=100, channel_name=None, analyse_media=True, max_date=None, stop_at_max_date=STOP_AT_MAX_DATE):
+    def _get_messages(self, client, channel_id, limit=100, channel_name=None, analyse_media=True, max_date=None, stop_at_max_date=STOP_AT_MAX_DATE):
         messages = []
         count = 0
         if stop_at_max_date=="false":
@@ -209,8 +210,12 @@ class TelegramAPI:
 
     def get_messages_from_groups(self, group_file=None, group_list=[]):
         if group_file:
-            with open(group_file, 'r') as f:
-                groups = json.loads(f.read())
+            if group_file.startswith("s3"):
+                s3_filename = group_file.replace("s3://%s/"%OUTPUT_DATA_BUCKET_NAME,"")
+                groups = s3_operations.get_s3_file(OUTPUT_DATA_BUCKET_NAME, s3_filename)
+            else:
+                with open(group_file, 'r') as f:
+                    groups = json.loads(f.read())
             print("Loaded %s groups from %s " % (len(groups), group_file))
         elif len(group_list)>0:
             groups = group_list
@@ -225,7 +230,7 @@ class TelegramAPI:
                 group_id = group["id"]
                 group_name = group["name"]
                 print("Fetching messages from group: %s (%s)..." % (group_name, group_id))
-                messages, fn = tg.get_messages(
+                messages, fn = self._get_messages(
                     client,
                     group_id,
                     channel_name=group_name,
@@ -251,11 +256,16 @@ class TelegramAPI:
     def _get_groups_participants_and_profile_image(self, group_id, groups_file=None):
         if not groups_file:
             groups_file = GROUP_FILE_NAME
-        with open(groups_file, 'r') as f:
-            groups = json.loads(f.read())
+        if groups_file.startswith("s3"):
+            s3_filename = groups_file.replace("s3://%s/"%OUTPUT_DATA_BUCKET_NAME,"")
+            groups = s3_operations.get_s3_file(OUTPUT_DATA_BUCKET_NAME, s3_filename)
+        else:
+            with open(groups_file, 'r') as f:
+                groups = json.loads(f.read())
         for group in groups:
             if group_id == group["entity"]["id"]:
                 return group["entity"]["participants_count"], group["profile_photo"]
+        return None, None
 
 
 if __name__ == "__main__":
