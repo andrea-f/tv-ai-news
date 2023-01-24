@@ -1,0 +1,10 @@
+[
+  {
+    "name": "Cyber-monitor",
+    "id": 1524813650,
+    "analyse_media": true,
+    "max_past_messages": 100,
+    "category": "cybersecurity",
+    "max_past_date": "01/01/2023"
+  }
+]

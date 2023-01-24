@@ -50,13 +50,6 @@ class TelegramTV:
                     item["keywords"] = keywords
                 if "keywords_found_in_video" in message:
                     keywords = []
-                    labels = message["keywords_found_in_video"]["labels"]["labels"]
-                    for l in labels:
-                        if l["confidence"] >= MIN_CONFIDENCE:
-                            keywords.append({
-                                "name": l["name"],
-                                "timestamp": l["timestamp"]
-                            })
                     celebs = message["keywords_found_in_video"]["celebs"]["celebs"]
                     if len(celebs)>0:
                         for c in celebs:
@@ -64,24 +57,26 @@ class TelegramTV:
                                 "name": c["name"],
                                 "timestamp": c["timestamp"]
                             })
-
+                    labels = message["keywords_found_in_video"]["labels"]["labels"]
+                    for l in labels:
+                        if l["confidence"] >= MIN_CONFIDENCE:
+                            keywords.append({
+                                "name": l["name"],
+                                "timestamp": l["timestamp"]
+                            })
                     if "keywords" in item:
                         item["keywords"] = item["keywords"] + message["keywords_found_in_video"]
                     else:
                         item["keywords"] = keywords
-
                     item["video_info"] = message["keywords_found_in_video"]["labels"]["video_info"]
-
                 if "views" in message:
                     item["views"] = message["views"]
                 else:
                     item["views"] = None
-
                 if "forwards" in message:
                     item["forwards"] = message["forwards"]
                 else:
                     item["forwards"] = None
-
                 if len(filter_keywords) > 0:
                     add = False
                     for k in filter_keywords:
@@ -95,7 +90,6 @@ class TelegramTV:
                     playlist.append(item)
         print("Generated playlist with %s items for %s" % (len(playlist), group["name"]))
         return playlist
-
 
 
     def save_playlist(self, playlist, playlist_file):
@@ -124,6 +118,7 @@ if __name__ == "__main__":
         messages = tgtv.load_local_messages(group["messages_file"])
         playlist = tgtv.generate_playlist(messages=messages,group=group)
         playlists += playlist
+
     tgtv.save_playlist(playlists, groups_input+"__playlists.json")
     print("Total duration: %s minutes" % tgtv.get_playlist_duration(playlists))
 

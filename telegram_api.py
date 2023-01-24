@@ -154,19 +154,17 @@ class TelegramAPI:
                 if download_path:
                     message_obj['download_path'] = download_path
 
-                    # save media to S3
-                    s3_file_name = download_path.replace(OUTPUT_FOLDER_NAME, "")
-                    s3_file_path = s3_operations.save_file(OUTPUT_DATA_BUCKET_NAME, download_path, s3_file_name)
-                    if s3_file_path:
-                        message_obj["s3_file_name"] = s3_file_path
+                    # save downloaded media to S3
+                    s3_file_name=saver.save_media(file_name=download_path, save_local_file=False)
+                    message_obj["s3_file_name"] = s3_file_name
 
                     # get keywords from video and images
                     if analyse_media:
                         print("Processing for content analysis: %s" % download_path)
-                        if (download_path.endswith(".jpg") or download_path.endswith(".png")):
+                        if download_path.endswith(".jpg") or download_path.endswith(".png"):
                             message_obj["keywords_found_in_image"] = media_analyser.get_keywords_image(download_path)
                         elif download_path.lower().endswith(".mp4"):
-                            message_obj["keywords_found_in_video"] = media_analyser.get_keywords(OUTPUT_DATA_BUCKET_NAME, s3_file_path, aws_s3_role_arn)
+                            message_obj["keywords_found_in_video"] = media_analyser.get_keywords(OUTPUT_DATA_BUCKET_NAME, s3_file_name, aws_s3_role_arn)
 
                 # translate text if its not english
                 if "message" in message_obj and len(message_obj["message"])>0:
@@ -198,14 +196,11 @@ class TelegramAPI:
                     str(count)+"/"+str(limit)
                 )
                 count += 1
-                saved_file_name = saver.save_media(messages, fn)
+                saver.save_media(messages, fn)
         except Exception as e:
             print("Error in parsing messages: %s" %e)
             traceback.print_exc()
-
-
         print("Parsed %s messages from %s, saved to: %s" % (len(messages), channel_name, fn))
-
         return messages, fn
 
     def get_messages_from_groups(self, group_file=None, group_list=[]):
