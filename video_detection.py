@@ -86,7 +86,7 @@ class VideoDetect:
         #=====================================
         response = self.rek.start_label_detection(Video={'S3Object': {'Bucket': self.bucket, 'Name': self.video}},
                                                   NotificationChannel={'RoleArn': self.roleArn, 'SNSTopicArn': self.snsTopicArn})
-        print('Start Job Id: ' + response['JobId'])
+        #print('Start Job Id: ' + response['JobId'])
         r = self.GetResultsLabels(response['JobId'])
         results["labels"] = r
         #print("l",r)
@@ -106,7 +106,7 @@ class VideoDetect:
         #response = self.rek.start_content_moderation(Video={'S3Object':{'Bucket':self.bucket,'Name':self.video}},
         #    NotificationChannel={'RoleArn':self.roleArn, 'SNSTopicArn':self.topicArn})
 
-        print('Start Job Id: ' + response['JobId'])
+        #print('Start Job Id: ' + response['JobId'])
         #self.GetResultsFaces(rekMessage['JobId'])
         #self.GetResultsFaceSearchCollection(rekMessage['JobId'])
         #self.GetResultsPersons(rekMessage['JobId'])
@@ -171,7 +171,7 @@ class VideoDetect:
             if 'NextToken' in response:
                 paginationToken = response['NextToken']
             else:
-                print("FINISHED LABELS, found: %s" % len(label_results["labels"]))
+                #print("FINISHED LABELS, found: %s" % len(label_results["labels"]))
                 finished = True
         return label_results
 
@@ -346,7 +346,7 @@ class VideoDetect:
             if 'NextToken' in response:
                 paginationToken = response['NextToken']
             else:
-                print("FINISHED LABELS, found: %s" % len(celebrities_results["celebs"]))
+                #print("FINISHED LABELS, found: %s" % len(celebrities_results["celebs"]))
                 finished = True
         return celebrities_results
 

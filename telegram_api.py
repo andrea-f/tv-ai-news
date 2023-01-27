@@ -124,9 +124,10 @@ class TelegramAPI:
                 # Save profile photo
                 media_fn = "../media/%s___%s/"%(g["name"], channel_id)
                 profile_file_name = g["name"]+"__"+str(channel_id)+"__profile_image.jpg"
-                g["profile_photo"]= media_fn+"/"+profile_file_name
+                g["local_profile_photo"]= media_fn+profile_file_name
                 # Download the group's profile photo and save it to a file
                 file = client.download_profile_photo(channel_id, file=media_fn+profile_file_name)
+                g["profile_photo"]=saver.save_media(file_name=file, save_local_file=False)
                 print("group name: ", g['name'], c, len(groups))
                 groups_obj.append(g)
                 c+=1
@@ -269,7 +270,10 @@ class TelegramAPI:
             print("Error in parsing messages: %s" %e)
             traceback.print_exc()
             s3_messages_file_name = None
-        print("Parsed %s messages from %s, saved to: %s" % (len(messages), channel_name, fn))
+        if len(messages)>0:
+            print("Parsed %s messages from %s, saved to: %s" % (len(messages), channel_name, fn))
+        else:
+            print("No new messages for %s " % channel_name)
         return messages, fn, s3_messages_file_name
 
 

@@ -42,7 +42,7 @@ def save_file(bucket_name, file_name, s3_file_name):
         s3_client = session.client("s3")
         # Upload the file to the S3 bucket
         s3_client.upload_file(file_name, bucket_name, s3_file_name)
-        print("Loaded to S3 bucket %s the file: %s" % (bucket_name, file_name))
+        #print("Loaded to S3 bucket %s the file: %s" % (bucket_name, file_name))
         return s3_file_name
     except Exception as e:
         print("Error in saving to S3 bucket %s the file %s: %s" % (bucket_name, file_name, e))

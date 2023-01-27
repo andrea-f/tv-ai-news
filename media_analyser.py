@@ -127,7 +127,7 @@ def get_keywords_image(image_name):
         orig_text = "text"
 
     keywords[orig_text] = [{"word":t['DetectedText'], "confidence": t["Confidence"]} for t in response_text["TextDetections"] if len(t)>0]
-    print("Found %s keywords for %s" % (len(keywords), image_name))
+    #print("Found %s keywords for %s" % (len(keywords), image_name))
     return keywords
 
 #def check_message_already_downloaded(signature):

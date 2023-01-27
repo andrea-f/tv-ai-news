@@ -33,16 +33,14 @@ def save_media(data={}, file_name="", save_local_file=True, return_both=False, a
     if save_local_file:
         file_name = save_local(data, file_name)
     s3_file_path = s3_operations.save_file(OUTPUT_DATA_BUCKET_NAME, file_name, s3_file_name)
-    print(OUTPUT_DATA_BUCKET_NAME, s3_file_path, s3_file_name, file_name)
     if save_local_file:
-        print("Saved: %s and %s" % (file_name, "s3://"+OUTPUT_DATA_BUCKET_NAME+"/"+s3_file_path))
+        #print("Saved: %s and %s" % (file_name, "s3://"+OUTPUT_DATA_BUCKET_NAME+"/"+s3_file_path))
         if not return_both:
             return file_name
         else:
             return file_name, s3_file_path
     else:
-
-        print("Saved %s" % ("s3://"+OUTPUT_DATA_BUCKET_NAME+"/"+s3_file_path))
+        #print("Saved %s" % ("s3://"+OUTPUT_DATA_BUCKET_NAME+"/"+s3_file_path))
         return s3_file_path
 
 
