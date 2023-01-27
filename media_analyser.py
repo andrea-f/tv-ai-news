@@ -100,21 +100,41 @@ def get_keywords_image(image_name):
     response_labels = rekognition.detect_labels(Image={'Bytes': image_bytes}, MinConfidence=90)
     response_celebs = rekognition.recognize_celebrities(Image={'Bytes': image_bytes})
     response_text = rekognition.detect_text(Image={'Bytes': image_bytes})
+
+
     # Print the labels that were detected
     # print(response['Labels'])
     keywords = {
         "labels": response_labels["Labels"],
-        "celebs": response_celebs["CelebrityFaces"],
-        "text": [{"word":t['DetectedText'], "confidence": t["Confidence"]} for t in response_text["TextDetections"] if len(t)>0]
+        "celebs": response_celebs["CelebrityFaces"]
     }
+    translated = False
+    try:
+        full_text = ""
+        for t in response_text["TextDetections"]:
+            full_text += "%s " % t['DetectedText']
+        if len(full_text.strip())>0:
+            language = detect_text_language(full_text)
+            if not "en" == language:
+                translated_message = translate_text(full_text, language_source=language)
+                keywords["text"] = [{"word": p} for p in translated_message.split(" ") if len(p.strip(" "))>0]
+                translated = True
+    except Exception as e:
+        print("Error in tranlsating text extracted from %s image: %s" % (image_name, e))
+    if translated:
+        orig_text = "original_text"
+    else:
+        orig_text = "text"
+
+    keywords[orig_text] = [{"word":t['DetectedText'], "confidence": t["Confidence"]} for t in response_text["TextDetections"] if len(t)>0]
     print("Found %s keywords for %s" % (len(keywords), image_name))
     return keywords
 
-def check_message_already_downloaded(signature):
+#def check_message_already_downloaded(signature):
     #exists = check_signature_in_folders(signature, messages_folder)
     #full_file_paths = get_filepaths("/Users/johnny/Desktop/TEST")
-    exists = check_signature_in_s3_file(signature)
-    return exists
+    #exists = check_signature_in_s3_file(signature)
+    #return exists
 
 def check_signature_in_folders(signature, messages_folder):
     #files = os.listdir(messages_folder)

@@ -3,7 +3,7 @@ import boto3
 import json
 import sys
 import os
-SAVE_DIR = os.getenv("SAVE_DIR", "../output_data/downloaded_site_data")
+SAVE_DIR = os.getenv("SAVE_DIR", ".")
 
 
 def get_s3_file(bucket_name, filename, save_dir=None):

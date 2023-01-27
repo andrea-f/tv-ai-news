@@ -14,13 +14,13 @@ from datetime import datetime
 from datetime import date
 import hashlib
 
-STOP_AT_MAX_DATE = os.getenv("STOP_AT_MAX_DATE", "false")
+STOP_AT_MAX_DATE = os.getenv("STOP_AT_MAX_DATE", "true")
 OUTPUT_DATA_BUCKET_NAME = os.getenv("OUTPUT_DATA_BUCKET_NAME", "telegram-output-data")
 OUTPUT_FOLDER_NAME = os.getenv("OUTPUT_FOLDER_NAME", "../media/")
 OUTPUT_FOLDER_MESSAGES = os.getenv("OUTPUT_FOLDER_MESSAGES", "../messages/")
 GROUP_FILE_NAME = os.getenv("GROUP_FILE_NAME", "groups.json")
 CREDENTIALS_FILE = os.getenv("CREDENTIALS_FILE", "creds.json")
-FORCE_REDOWNLOAD = os.getenv("FORCE_REDOWNLOAD", "yes")
+FORCE_REDOWNLOAD = os.getenv("FORCE_REDOWNLOAD", "no")
 UNIQUE_SIGNATURES_FILE_NAME = os.getenv("UNIQUE_SIGNATURES_FILE_NAME", "unique_signatures.csv")
 
 def date_format(message):
@@ -163,6 +163,15 @@ class TelegramAPI:
         else:
             media_fn = OUTPUT_FOLDER_NAME+"%s/" % channel_id
             fn = OUTPUT_FOLDER_MESSAGES + 'messages__%s.json' % channel_id
+        s3_messages_file_name = fn.replace("../", "")
+        try:
+            unique_signatures = s3_operations.get_s3_file(OUTPUT_DATA_BUCKET_NAME, UNIQUE_SIGNATURES_FILE_NAME, "")
+            unique_signatures = [u.replace("\n", "") for u in unique_signatures if len(u)>0]
+            print("Loaded %s unique signatures!" % len(unique_signatures))
+
+        except Exception as e:
+            print("Did not get unique_signatures file: %s/%s because %s" % (OUTPUT_DATA_BUCKET_NAME, UNIQUE_SIGNATURES_FILE_NAME, e))
+            raise Exception("Signatures file not found: %s" % e)
 
         try:
             for message in client.get_messages(channel_id, limit=limit):
@@ -173,6 +182,8 @@ class TelegramAPI:
                         max_date_obj = max_date
                     if max_date_obj.timestamp() > message.date.timestamp():
                         continue
+
+
                 message_obj = message.to_dict()
 
                 # get message date
@@ -183,15 +194,11 @@ class TelegramAPI:
                 message_obj["signature"] = hashlib.md5(unique_str.encode('utf-8', errors="ignore")).hexdigest()
 
                 # check if message has already been processed
-                unique_signatures = []
                 if not force_redownload == "yes":
                     # message_exists = media_analyser.check_message_already_downloaded(message_obj["signature"])
                     # if message_exists:
-                    try:
-                        unique_signatures = s3_operations.get_s3_file(OUTPUT_DATA_BUCKET_NAME, UNIQUE_SIGNATURES_FILE_NAME)
-                    except Exception as e:
-                        print("Did not get unique_signatures file: %s/%s because %s" % (OUTPUT_DATA_BUCKET_NAME, UNIQUE_SIGNATURES_FILE_NAME, e))
                     if message_obj["signature"] in unique_signatures:
+                        print("Message %s already processed" % message_obj["signature"])
                         continue
 
 
@@ -249,13 +256,14 @@ class TelegramAPI:
 
                 messages.append(message_obj)
                 print(
-                    message_obj["translated_message"] if "translated_message" in message_obj else message_obj["message"] if "message" in message_obj else "",
+                    "message text: ",
+                    message_obj["translated_message"][:15] if "translated_message" in message_obj else message_obj["message"][:15] if "message" in message_obj else "",
                     message_obj["date"],
                     str(count)+"/"+str(limit)
                 )
                 count += 1
                 unique_signatures.append(message_obj["signature"])
-                saver.save_media(unique_signatures, UNIQUE_SIGNATURES_FILE_NAME)
+                saver.save_media("\n".join(unique_signatures), UNIQUE_SIGNATURES_FILE_NAME)
                 local_messages_file_name, s3_messages_file_name = saver.save_media(message_obj, fn, return_both=True, append=True)
         except Exception as e:
             print("Error in parsing messages: %s" %e)
@@ -308,6 +316,7 @@ class TelegramAPI:
                 c+=1
         except Exception as e:
             print("Error in processing groups: %s" % e)
+            traceback.print_exc()
 
         saver.save_media(processed_groups, group_file+"__processed.json")
         finish = time.monotonic()
