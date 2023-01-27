@@ -1,4 +1,9 @@
 import os, sys, json
+import saver
+import s3_operations
+import traceback
+
+OUTPUT_DATA_BUCKET_NAME = os.getenv("OUTPUT_DATA_BUCKET_NAME", "telegram-output-data")
 MIN_CONFIDENCE = 50
 
 class TelegramTV:
@@ -23,52 +28,100 @@ class TelegramTV:
                 item = {
                     "group_name": group["name"],
                     "group_participants": group["participants_count"],
-                    "group_icon": group["group_image"],
+                    "group_icon": group["profile_photo"],
                     "category": group["category"],
                     "reactions": message["total_reactions"] if "total_reactions" in message else 0,
                     "source_link": message["id"],
                     "media_url": message["download_path"],
-                    "text": message["message"],
+                    "text": message.get("message",""),
                     "translated_text": message["translated_message"] if "translated_message" in message else None,
                     "message_date": message["date"],
                     "s3_file_name": message["s3_file_name"],
-                    "post_author": message["post_author"] if "post_author" in message and message["post_author"] else None
+                    "post_author": message["post_author"] if "post_author" in message and message["post_author"] else None,
+                    "entities": message.get("entities_in_message", {}),
+                    "sentiment": message.get("sentiment", {})
                 }
-
+                keywords = []
+                unique_keywords = []
                 if "keywords_found_in_image" in message:
-                    keywords = []
-                    for i in message["keywords_found_in_image"]:
-                        if i["Confidence"] > MIN_CONFIDENCE:
-                            keywords.append({
-                                "name": i["Name"]
-                            })
-                            if len(i["Parents"])>0:
-                                for p in i["Parents"]:
+                    try:
+                        for i in message["keywords_found_in_image"].keys():
+                            if "labels" in i:
+                                for l in message["keywords_found_in_image"][i]:
+                                    if l["Confidence"] > MIN_CONFIDENCE:
+                                        if not l["Name"] in unique_keywords:
+                                            keywords.append({
+                                                "name": l["Name"]
+                                            })
+                                            if len(l["Parents"]) > 0:
+                                                for p in l["Parents"]:
+                                                    keywords.append({
+                                                        "name": p["Name"]
+                                                    })
+                                            unique_keywords.append(l["Name"])
+                            if "celebs" in i:
+                                for v in message["keywords_found_in_image"][i]:
+                                    if not v["Name"] in unique_keywords:
+                                        keywords.append(
+                                            {
+                                                "name": v["Name"]
+                                            }
+                                        )
+                                        unique_keywords.append(l["Name"])
+                            if "text" in i:
+                                for z in message["keywords_found_in_image"][i]:
+                                    if not z["word"] in unique_keywords:
+                                        keywords.append(
+                                            {"name": z["word"]}
+                                        )
+                                        unique_keywords.append(z["word"])
+                    except:
+                        for i in message["keywords_found_in_image"]:
+                            if i["Confidence"] > MIN_CONFIDENCE:
+                                if not i["Name"] in unique_keywords:
                                     keywords.append({
-                                        "name": p["Name"]
+                                        "name": i["Name"]
                                     })
+                                    unique_keywords.append(i["Name"])
+                                    if len(i["Parents"])>0:
+                                        for p in i["Parents"]:
+                                            if not p["Name"] in unique_keywords:
+                                                keywords.append({
+                                                    "name": p["Name"]
+                                                })
+                                                unique_keywords.append(p["Name"])
+
                     item["keywords"] = keywords
                 if "keywords_found_in_video" in message:
-                    keywords = []
                     celebs = message["keywords_found_in_video"]["celebs"]["celebs"]
                     if len(celebs)>0:
                         for c in celebs:
-                            keywords.append({
-                                "name": c["name"],
-                                "timestamp": c["timestamp"]
-                            })
+
+                            if not c["name"] in unique_keywords:
+                                keywords.append({
+                                    "name": c["name"],
+                                    "timestamp": c["timestamp"]
+                                })
+                                unique_keywords.append(c["name"])
                     labels = message["keywords_found_in_video"]["labels"]["labels"]
                     for l in labels:
                         if l["confidence"] >= MIN_CONFIDENCE:
-                            keywords.append({
-                                "name": l["name"],
-                                "timestamp": l["timestamp"]
-                            })
+
+                            if not l["name"] in unique_keywords:
+                                keywords.append({
+                                    "name": l["name"],
+                                    "timestamp": l["timestamp"]
+                                })
+                                unique_keywords.append(l["name"])
                     if "keywords" in item:
                         item["keywords"] = item["keywords"] + message["keywords_found_in_video"]
                     else:
                         item["keywords"] = keywords
-                    item["video_info"] = message["keywords_found_in_video"]["labels"]["video_info"]
+                    try:
+                        item["video_info"] = message["keywords_found_in_video"]["labels"]["video_info"]
+                    except Exception as e:
+                        print("Video info not found, message['keywords_found_in_video']['labels']:%s" % message["keywords_found_in_video"]["labels"].keys())
+
                 if "views" in message:
                     item["views"] = message["views"]
                 else:
@@ -93,9 +146,8 @@ class TelegramTV:
 
 
     def save_playlist(self, playlist, playlist_file):
-        with open(playlist_file, 'w') as f:
-            f.write(json.dumps(playlist, indent=4))
-        print("Saved playlist file %s with %s items" % (playlist_file, len(playlist)))
+        saved_file = saver.save_media(data=playlist, file_name=playlist_file, save_local_file=True)
+        print("Saved playlist file %s with %s items" % (saved_file, len(playlist)))
 
     def get_playlist_duration(self, playlist, image_on_screen_duration_ms=5000):
         total_duration_ms = 0
@@ -108,17 +160,32 @@ class TelegramTV:
 
 if __name__ == "__main__":
     tgtv = TelegramTV()
-
-    groups_input = "groups_to_analyse__ukr.json__processed.json"
-    with open(groups_input, 'r') as f:
-        groups = json.loads(f.read())
-
+    groups_file = sys.argv[1]
+    if "s3://" in groups_file:
+        groups_file = groups_file.replace("s3://%s/"%OUTPUT_DATA_BUCKET_NAME,"")
+        groups = s3_operations.get_s3_file(OUTPUT_DATA_BUCKET_NAME, groups_file)
+    else:
+        with open(groups_file, 'r') as f:
+            groups = json.loads(f.read())
     playlists = []
     for group in groups:
-        messages = tgtv.load_local_messages(group["messages_file"])
-        playlist = tgtv.generate_playlist(messages=messages,group=group)
-        playlists += playlist
+        try:
+            messages = tgtv.load_local_messages(group["messages_file"])
+        except Exception as e:
+            #print("Error in getting %s: %s\n" %(group["messages_file"], e))
+            print("Getting S3 file: %s" % (group["s3_messages_file_name"]))
+            messages = s3_operations.get_s3_file(OUTPUT_DATA_BUCKET_NAME, group["s3_messages_file_name"])
 
-    tgtv.save_playlist(playlists, groups_input+"__playlists.json")
+        try:
+            playlist = tgtv.generate_playlist(messages=messages,group=group)
+            playlists += playlist
+        except Exception as e:
+            print("Error in genertaing playlists for %s: %s" % (group["messages_file"], e))
+            traceback.print_exc()
+
+    playlists = sorted(playlists,key=lambda x: x.get("date", 0), reverse=True)
+    # sort by reactions
+    #playlists = sorted(playlists,key=lambda x: x["reactions"], reverse=True)
+    tgtv.save_playlist(playlists, groups_file+"__playlists.json")
     print("Total duration: %s minutes" % tgtv.get_playlist_duration(playlists))
 

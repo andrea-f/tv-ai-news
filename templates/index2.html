@@ -4,6 +4,7 @@
     <!-- other head content -->
     <script>
       let videos = [];
+
       {% for item in video_list %}
 
 
@@ -13,24 +14,34 @@
                 "group_name":"{{item.group_name}}",
                 "group_participants": {{item.group_participants}},
                 "category": "{{item.category}}",
-                "reactions":"{{item.reactions}}",
+                "reactions":{{item.reactions}},
                 "media_url":"{{item.media_url.replace('..','')}}",
                 "source_link":"{{item.source_link}}",
                 "translated_text":"{{item.translated_text.replace('\"','').replace('“','').replace('”','').replace('\n',' ')|safe}}",
-
+                "entities": "{{item.entities_list}}",
+                "sentiment": "{{item.sentiment_word}}",
                 "message_date":"{{item.message_date}}",
                 "keywords":"{{item.keywords_list}}",
-                "views":"{{item.views}}",
-                "forwards":"{{item.forwards}}"
-                {% if video_info in item %}
-                ,"duration": {{item.video_info.duration_in_ms}}
+                {% if item.views %}
+                    "views":{{item.views}},
                 {% else %}
-                ,"duration": 5000
+                    "views":0,
+                {% endif %}
+                {% if item.forwards %}
+                    "forwards":{{item.forwards}},
+                {% else %}
+                    "forwards":0,
+                {% endif %}
+                {% if video_info in item.keys() %}
+                    "duration": {{item.video_info.duration_ms}}
+                {% else %}
+                    "duration": 5000
                 {% endif %}
             }
         )
       {% endfor %}
     console.log(videos);
+
     </script>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" integrity="sha384-JcKb8q3iqJ61gNV9KGb8thSsNjpSL0n8PARn9HuZOnIxN0hoP+VmmDGMN5t9UJ0Z" crossorigin="anonymous">
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
@@ -39,24 +50,39 @@
 
 
 </head>
-<body  onload="updateInfo()">
+<body onload=updateInfo()>
 <script src="static/controls.js"></script>
 <div class="container-fluid">
     <div class="row">
         <div class="col-md-8">
-            <div class="embed-responsive embed-responsive-16by9" id="video_container">
-                <img class="embed-responsive-item" id="media_element_img" src="" style="display:none;" />
-                <video class="embed-responsive-item" id="video" onended="playNext()" controls autoplay muted preload="auto">
-                    <source src="" id="media_element">
-                    Your browser does not support the video tag.
-                </video>
+            <div class="row">
+
+            </div>
+            <div class="row">
+                <div class="embed-responsive embed-responsive-16by9" id="video_container">
+                    <img class="embed-responsive-item" id="media_element_img" src="" style="display:none;" />
+                    <video class="embed-responsive-item" id="video" onended="playNext()" controls autoplay muted preload="auto">
+                        <source src="" id="media_element">
+                        Your browser does not support the video tag.
+                    </video>
+                </div>
+            </div>
+            <div class="row" style="height:100px">
+                <h5><span id="text" class="mh-100 h-25"></span></h5>
+            </div>
+            <div class="row">
+                <div class="text-center">
+                    <button class="btn btn-danger mr-2" onclick="playPrev()">Previous</button>
+                    <button class="btn btn-info" onclick="pause()" id="pause_button">Pause</button>
+                    <button class="btn btn-success ml-2" onclick="playNext()">Next</button>
+                    <button class="btn btn-info ml-2 mr-2" onclick="sortBy('message_date')" id="by_date">Sort by date latest->oldest</button>
+                    <button class="btn btn-info mr-2" onclick="sortBy('reactions')" id="by_reactions">Sort by reactions</button>
+                    <button class="btn btn-info" onclick="sortBy('views')" id="by_views">Sort by views</button>
+                </div>
             </div>
         </div>
         <div class="col-md-4">
-            <div class="text-center">
-                <button class="btn btn-danger mr-2" onclick="playPrev()">Previous</button>
-                <button class="btn btn-success" onclick="playNext()">Next</button>
-            </div>
+
             <br>
             <div class="card">
                 <div class="card-body">
@@ -64,28 +90,32 @@
                     <p class="card-text">Group Participants: <span id="group_participants"></span></p>
                     <p class="card-text">Category: <span id="category"></span></p>
                     <p class="card-text">Reactions: <span id="reactions"></span></p>
-                    <!--<p class="card-text">Text: <span id="text"></span></p> -->
-                    <p class="card-text">Translated Text: <span id="translated_text"></span></p>
+
+                    <!--<p class="card-text">Translated Text: <span id="translated_text"></span></p>-->
                     <p class="card-text">Message Date: <span id="message_date"></span></p>
                     <p class="card-text">Keywords: <span id="keywords"></span></p>
                     <p class="card-text">Views: <span id="views"></span></p>
                     <p class="card-text">Forwards: <span id="forwards"></span></p>
                     <p class="card-text">Source Link: <span id="source_link"></span></p>
                     <p class="card-text">Duration in MS: <span id="duration"></span></p>
+                    <p class="card-text">Sentiment: <span id="sentiment"></span></p>
+                    <p class="card-text">Entities: <span id="entities"></span></p>
                     <p class="card-text">Media URL: <span id="media_url"></span></p>
+                    <p class="card-text">Item: <span id="item_number"></span></p>
                 </div>
             </div>
             <br>
         </div>
     </div>
+
 </div>
 <br>
 
 <div class="container-fluid fixed-bottom" id="footer">
-    <div class="row h4 bg-danger text-white">
+    <div class="row h3 bg-danger text-white mb-0">
         <marquee>
             {% for item in video_list %}
-            {{ item.message_date }}: {{ item.translated_text }} ---
+            {{ item.message_date }}: {{ item.text }} ---
             {% endfor %}
         </marquee>
     </div>

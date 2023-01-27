@@ -17,6 +17,7 @@ COPY video_detection.py /tmp/utils_dir
 COPY session.session /tmp/utils_dir
 COPY creds.json /tmp/utils_dir
 COPY groups.json /tmp/utils_dir
+COPY telegram_tv.py /tmp/utils_dir
 
 VOLUME ["/tmp/utils_dir"]
 WORKDIR /tmp/utils_dir

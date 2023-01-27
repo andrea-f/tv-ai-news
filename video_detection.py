@@ -171,7 +171,7 @@ class VideoDetect:
             if 'NextToken' in response:
                 paginationToken = response['NextToken']
             else:
-                print("FINISHED LABELS, found: %s" % len(label_results))
+                print("FINISHED LABELS, found: %s" % len(label_results["labels"]))
                 finished = True
         return label_results
 
@@ -346,7 +346,7 @@ class VideoDetect:
             if 'NextToken' in response:
                 paginationToken = response['NextToken']
             else:
-                print("FINISHED LABELS, found: %s" % len(celebrities_results))
+                print("FINISHED LABELS, found: %s" % len(celebrities_results["celebs"]))
                 finished = True
         return celebrities_results
 

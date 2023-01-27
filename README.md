@@ -55,4 +55,15 @@ Make sure the folders `messages` and `media` are created in a level above of thi
 ]
 ```
 Run: `python3 -m telegram_api --messages location_of_groups_json_file.json`
-This will start a long running task to fetch all the messages until `max_past_messages` is reached.
+This will start a long running task to fetch all the messages until `max_past_messages` is reached and saved in `location_of_groups_json_file.json__processed.json`
+4. After the messages have been gathered and saved in S3 for all groups in `location_of_groups_json_file.json__processed.json`, 
+generate the playlist by running: `python3 -m telegram_tv location_of_groups_json_file.json__processed.json`.
+5. Once the above command is finished, it will generate and save to S3 a new JSON file: `location_of_groups_json_file.json__processed.json__playlists.json`
+6. If a `__processed.json` file has already been created and needs to be converted to a playlist, run `python3 -m telegram_api -f` with the flag `fileWithAnalysedMessages` or `-f` so that the API fetching step is skipped and it goes directly to the playlist generation.
+The request to the state machine should be of this format:
+```json
+{
+  "load_messages_from_file": true,
+  "selected_groups_file": "s3://telegram-output-data/groups_to_analyse_inputs/26-01-2023_01:13:10__groups_to_analyse__-__18.json__processed.json"
+}
+```
