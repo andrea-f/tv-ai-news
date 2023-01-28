@@ -9,6 +9,8 @@ playlists_file = "../data/groups_to_analyse__ukr.json__processed.json__playlists
 playlists_file= "../data/groups_to_analyse__ukr.json__processed.json__playlists.json"
 playlists_file= "groups_to_analyse__russia.json__processed.json__playlists.json"
 playlists_file = "26-01-2023_01_13_10__groups_to_analyse__-__18.json__processed.json__playlists.json__public.json"
+playlists_file = "27-01-2023_20_11_34__groups_to_analyse__-__18.json__processed.json__playlists.json__public.json"
+playlists_file = "ukraine.json"
 
 def process_video_list(video_list):
     processed_video_list =[]
@@ -50,9 +52,7 @@ processed_video_list, video_list_by_date, video_list_by_reactions = process_vide
 
 @app.route('/')
 def index():
-
-
-    return render_template('index2.html', video_list=processed_video_list)
+    return render_template('index.html', video_list=processed_video_list)
 
 @app.route('/static/<path:path>')
 def send_report(path):

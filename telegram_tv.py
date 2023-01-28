@@ -174,7 +174,10 @@ if __name__ == "__main__":
         except Exception as e:
             #print("Error in getting %s: %s\n" %(group["messages_file"], e))
             print("Getting S3 file: %s" % (group["s3_messages_file_name"]))
-            messages = s3_operations.get_s3_file(OUTPUT_DATA_BUCKET_NAME, group["s3_messages_file_name"])
+            try:
+                messages = s3_operations.get_s3_file(OUTPUT_DATA_BUCKET_NAME, group["s3_messages_file_name"])
+            except:
+                continue
 
         try:
             playlist = tgtv.generate_playlist(messages=messages,group=group)

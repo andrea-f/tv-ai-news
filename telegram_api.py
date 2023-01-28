@@ -127,13 +127,15 @@ class TelegramAPI:
                 g["local_profile_photo"]= media_fn+profile_file_name
                 # Download the group's profile photo and save it to a file
                 file = client.download_profile_photo(channel_id, file=media_fn+profile_file_name)
-                g["profile_photo"]=saver.save_media(file_name=file, save_local_file=False)
+                g["profile_photo"]=saver.save_media(file_name=media_fn+profile_file_name, save_local_file=False)
                 print("group name: ", g['name'], c, len(groups))
                 groups_obj.append(g)
+
                 c+=1
         except Exception as e:
             print("Error in fetching groups: %s" % e)
             traceback.print_exc()
+
         # disconnecting the telegram session
         client.disconnect()
         saved_file_name = saver.save_media(groups_obj, GROUP_FILE_NAME)

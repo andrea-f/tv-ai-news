@@ -67,3 +67,5 @@ The request to the state machine should be of this format:
   "selected_groups_file": "s3://telegram-output-data/groups_to_analyse_inputs/26-01-2023_01:13:10__groups_to_analyse__-__18.json__processed.json"
 }
 ```
+
+7. Run server to show TV interface: `python3 -m server 80`, then go to: http://127.0.0.1

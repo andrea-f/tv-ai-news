@@ -6,6 +6,7 @@ var timeoutId=null;
 function cancelTimeout() {
     try {
         clearTimeout(timeoutId);
+        console.log("cancel timeout")
       } catch (err) {}
 }
 
@@ -17,6 +18,7 @@ function playNext() {
   }
   updateInfo();
 }
+
 function playPrev() {
  cancelTimeout();
  if (currentVideo>0) {
@@ -34,9 +36,14 @@ function pause() {
         isChannelPaused=true;
         document.getElementById("pause_button").innerHTML = "Play";
     } else {
-        videoElement.play();
+        if (videos[currentVideo].media_url.indexOf(".jpg")==-1) {
+            videoElement.play();
+        } else {
+            timeoutId = setTimeout(function() { playNext(); }, 5000);
+        }
+
         isChannelPaused = false;
-        timeoutId = setTimeout(function() { playNext(); }, 5000);
+
         document.getElementById("pause_button").innerHTML = "Pause";
     }
 
@@ -76,22 +83,27 @@ function setMediaElement(item) {
         document.getElementById("media_element_img").style.display="block";
         document.getElementById("media_element_img").src = item.media_url;
         videoElement.style.display = "none";
-        timeoutId = setTimeout(function() { playNext(); }, 5000);
+        if (!isChannelPaused) {
+            console.log("setting timer")
+            timeoutId = setTimeout(function() { playNext(); }, 5000);
+        }
       } else if (item.media_url.indexOf(".pdf")==-1) {
+
         videoElement.style.display="block";
         document.getElementById("media_element").src = item.media_url;
         document.getElementById("media_element_img").style.display="none";
         videoElement.load();
-        videoElement.play();
+        if (!isChannelPaused) {
+            console.log("playing video")
+            videoElement.play();
+        } else {
+            videoElement.pause();
+        }
+
       }
-      isChannelPaused = false;
+      //isChannelPaused = false;
 }
 
-const compare = (a, b) => {
-    if(a > b) return 1;
-    if(a < b) return -1;
-    return 0
-};
 
 function sortBy(filter) {
     videos.sort(function(a, b) {
@@ -112,24 +124,3 @@ function sortBy(filter) {
     console.log(videos[0]);
 }
 
-function sortByOld(filter) {
-
-        orderedVideos = {};
-        videos.sort(function(a, b) {
-            if (a[filter] < b[filter]) {
-                return 1;
-            }
-            if (a[filter] > b[filter]) {
-                return -1;
-            }
-            return 0;
-        }).forEach(function(key) {
-            orderedVideos[key] = videos[key];
-            console.log(videos[key][filter]);
-        })
-        videos = orderedVideos;
-        console.log(videos[0])
-        currentVideo=0;
-        updateInfo();
-
-}
