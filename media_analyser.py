@@ -53,29 +53,6 @@ def translate_text(message, language_source='ru', language_target='en', current_
     return translated_message
 
 
-def get_keywords_old(download_path):
-    # Create a boto3 client for the Rekognition service
-    rekognition = boto3.client('rekognition')
-
-    # Load the video from a local file
-    print("Processing %s, extracting keywords..." % download_path)
-    video = open(download_path, "rb").read()
-
-    # OR, load the video from an S3 bucket
-    # s3 = boto3.client('s3')
-    # video = s3.get_object(Bucket='my-bucket', Key='path/to/video.mp4')['Body'].read()
-
-    # Extract keywords from the video
-    response = rekognition.detect_labels(Video={'Bytes': video})
-
-    # Print the keywords
-    keywords = []
-    for label in response['Labels']:
-        print(label['Name'])
-        keywords.append(label['Name'])
-    print("Extracted %s keywords from %s" % (len(keywords), download_path))
-    return keywords
-
 
 def get_keywords(bucket, s3_file_path, role):
     video = video_detection.VideoDetect(role, bucket, s3_file_path)
@@ -84,7 +61,7 @@ def get_keywords(bucket, s3_file_path, role):
 
 
 def get_keywords_image(image_name):
-    print("Getting labels, celebs, text in image for: %s" % image_name)
+    #print("Getting labels, celebs, text in image for: %s" % image_name)
     # Create a Rekognition client
     rekognition = boto3.client('rekognition')
 
@@ -130,46 +107,4 @@ def get_keywords_image(image_name):
     #print("Found %s keywords for %s" % (len(keywords), image_name))
     return keywords
 
-#def check_message_already_downloaded(signature):
-    #exists = check_signature_in_folders(signature, messages_folder)
-    #full_file_paths = get_filepaths("/Users/johnny/Desktop/TEST")
-    #exists = check_signature_in_s3_file(signature)
-    #return exists
 
-def check_signature_in_folders(signature, messages_folder):
-    #files = os.listdir(messages_folder)
-    cmd = ["grep", "-rnw", "%s"%messages_folder, "-e", "'%s'"% signature]
-    print(" ".join(cmd))
-    py2output = subprocess.check_output(cmd)
-    print('py2 said:', py2output)
-    print("")
-    #  '/path/to/somewhere/' -e 'pattern'
-    return py2output
-
-
-# def check_signature_in_s3_file(signature):
-#     unique_signatures = s3_operations.get_s3_file(OUTPUT_DATA_BUCKET_NAME, UNIQUE_SIGNATURES_FILE_NAME)
-#     if signature in unique_signatures:
-#         return True
-#
-#     return False
-
-
-
-def get_filepaths(directory):
-    """
-    This function will generate the file names in a directory
-    tree by walking the tree either top-down or bottom-up. For each
-    directory in the tree rooted at directory top (including top itself),
-    it yields a 3-tuple (dirpath, dirnames, filenames).
-    """
-    file_paths = []  # List which will store all of the full filepaths.
-
-    # Walk the tree.
-    for root, directories, files in os.walk(directory):
-        for filename in files:
-            # Join the two strings in order to form the full filepath.
-            filepath = os.path.join(root, filename)
-            file_paths.append(filepath)  # Add it to the list.
-
-    return file_paths  # Self-explanatory.

@@ -2,6 +2,7 @@ import os, sys, json
 import saver
 import s3_operations
 import traceback
+import telegram_tv_public_playlist
 
 OUTPUT_DATA_BUCKET_NAME = os.getenv("OUTPUT_DATA_BUCKET_NAME", "telegram-output-data")
 MIN_CONFIDENCE = 50
@@ -22,7 +23,6 @@ class TelegramTV:
 
     def generate_playlist(self, messages, group, filter_keywords=[]):
         playlist = []
-        print("Generating playlist from %s group from %s messages" % (group["name"], len(messages)))
         for message in messages:
             if "download_path" in message:
                 item = {
@@ -141,13 +141,26 @@ class TelegramTV:
                         playlist.append(item)
                 else:
                     playlist.append(item)
-        print("Generated playlist with %s items for %s" % (len(playlist), group["name"]))
+        #print("Generated playlist with %s items for %s" % (len(playlist), group["name"]))
+        playlists = sorted(playlist,key=lambda x: x.get("date", 0), reverse=True)
+        # sort by reactions
+        #playlists = sorted(playlists,key=lambda x: x["reactions"], reverse=True)
+        saved_file, s3_saved_file = self.save_playlist(playlists, group['s3_processed_groups_file_name']+"__playlists.json")
+        telegram_tv_public_playlist.lambda_handler(
+            {
+                "s3_processed_file":saved_file,
+                "category": group["category"]
+            }
+        )
         return playlist
 
 
     def save_playlist(self, playlist, playlist_file):
-        saved_file = saver.save_media(data=playlist, file_name=playlist_file, save_local_file=True)
-        print("Saved playlist file %s with %s items" % (saved_file, len(playlist)))
+        saved_file, s3_saved_file = saver.save_media(
+            data=playlist, file_name=playlist_file, save_local_file=True, append=True, return_both=True
+        )
+        #print("Saved playlist file %s with %s items" % (saved_file, len(playlist)))
+        return saved_file, s3_saved_file
 
     def get_playlist_duration(self, playlist, image_on_screen_duration_ms=5000):
         total_duration_ms = 0
@@ -157,6 +170,8 @@ class TelegramTV:
             else:
                 total_duration_ms += image_on_screen_duration_ms
         return total_duration_ms/1000/60
+
+
 
 if __name__ == "__main__":
     tgtv = TelegramTV()
@@ -172,7 +187,7 @@ if __name__ == "__main__":
         try:
             messages = tgtv.load_local_messages(group["messages_file"])
         except Exception as e:
-            #print("Error in getting %s: %s\n" %(group["messages_file"], e))
+
             print("Getting S3 file: %s" % (group["s3_messages_file_name"]))
             try:
                 messages = s3_operations.get_s3_file(OUTPUT_DATA_BUCKET_NAME, group["s3_messages_file_name"])

@@ -1,10 +1,22 @@
 <!-- index.html -->
 <html>
 <head>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-8LCM41VWKP"></script>
+    <script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-8LCM41VWKP');
+</script>
     <!-- other head content -->
     <script>
       let videos = [];
-
+      let refb = {{batch_number}};
+      let currentTotalVideoIndex = {{current_item}};
+      let totalItems = {{total_items}};
+      let nextVideosUrl=window.location.origin+"/news/{{category.replace(' ','-')}}/live/";
       {% for item in video_list %}
 
 
@@ -12,7 +24,7 @@
             {
                 "text":"{{ item.text.replace('\"','').replace('\n',' ').encode('utf8').decode('utf8')|safe }}",
                 "group_name":"{{item.group_name}}",
-                "group_participants": {{item.group_participants}},
+                "group_participants": "{{item.group_participants}}",
                 "category": "{{item.category}}",
                 "reactions":{{item.reactions}},
                 "media_url":"{{item.media_url.replace('..','')}}",
@@ -51,65 +63,116 @@
 
 </head>
 <body onload=updateInfo()>
-<script src="static/controls.js"></script>
-<div class="container-fluid">
+<script src="/static/controls.js"></script>
+<div class="container-fluid" style="margin-top:1%;">
+    <div class="row"><div class="col-md-12">
+       <h5 class="text-center"> Telegram TV is a vod to live news channel generator from relevant groups on the russian invasion of Ukraine.</h5>
+    </div>
+    </div>
     <div class="row">
-        <div class="col-md-8">
-            <div class="row">
-
-            </div>
-            <div class="row">
-                <div class="embed-responsive embed-responsive-16by9" id="video_container">
-                    <img class="embed-responsive-item" id="media_element_img" src="" style="display:none;" />
-                    <video class="embed-responsive-item" id="video" onended="playNext()" controls autoplay muted preload="auto">
-                        <source src="" id="media_element">
-                        Your browser does not support the video tag.
-                    </video>
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-header text-left">
+                    Channels navigation
                 </div>
+                <div class="card-body">
+                    <p class="card-text text-left">Channel name: {{category}}</p>
+                    <p class="card-text text-left">Item: <span id="item_number"></span></p>
+                </div>
+                <ul class="list-group list-group-flush text-center">
+                    <li class="list-group-item">
+                        <button class="btn btn-danger" onclick="playPrev()">Previous</button>
+                        <button class="btn btn-primary" onclick="pause()" id="pause_button">Pause</button>
+                        <button class="btn btn-success" onclick="playNext()">Next</button>
+                    </li>
+
+                </ul>
+                <ul class="list-group list-group-flush text-left">
+                    <li class="list-group-item">
+                        <button class="btn  btn-outline-dark" onclick="sortBy('message_date')" id="by_date">Sort by latest date</button>
+                    </li>
+                    <li class="list-group-item">
+                        <button class="btn  btn-outline-dark" onclick="sortBy('reactions')" id="by_reactions">Sort by reactions</button>
+                    </li>
+                    <li class="list-group-item">
+                        <button class="btn btn-outline-dark" onclick="sortBy('views')" id="by_views">Sort by views</button>
+                    </li>
+                </ul>
+
+                <div class="card-footer border-dark text-left text-muted"><span>Updated on: {{playlist_date}}</span></div>
             </div>
-            <div class="row" style="height:100px">
-                <h5><span id="text" class="mh-100 h-25"></span></h5>
-            </div>
+        </div>
+
+        <div class="col-md-6">
             <div class="row">
-                <div class="text-center">
-                    <button class="btn btn-danger mr-2" onclick="playPrev()">Previous</button>
-                    <button class="btn btn-info" onclick="pause()" id="pause_button">Pause</button>
-                    <button class="btn btn-success ml-2" onclick="playNext()">Next</button>
-                    <button class="btn btn-info ml-2 mr-2" onclick="sortBy('message_date')" id="by_date">Sort by date latest->oldest</button>
-                    <button class="btn btn-info mr-2" onclick="sortBy('reactions')" id="by_reactions">Sort by reactions</button>
-                    <button class="btn btn-info" onclick="sortBy('views')" id="by_views">Sort by views</button>
+                <div class="col-md-12">
+                    <div class="card">
+                        <div class="card-header">
+                            Message media and text
+                        </div>
+                        <div class="card-body">
+
+                            <div class="embed-responsive embed-responsive-16by9" id="video_container">
+                                <img class="embed-responsive-item" id="media_element_img" src="" style="object-fit: cover;display:none;" />
+                                <video class="embed-responsive-item" id="video" onended="playNext()" controls autoplay muted preload="auto">
+                                    <source src="" id="media_element">
+                                    Your browser does not support the video tag.
+                                </video>
+                            </div>
+                        </div>
+                        <div class="card-footer border-dark"><span id="text"></span></div>
+                    </div>
                 </div>
             </div>
         </div>
-        <div class="col-md-4">
 
-            <br>
+        <div class="col-md-3">
+
             <div class="card">
-                <div class="card-body">
-                    <p class="card-text">Group Name: <span id="group_name"></span></p>
-                    <p class="card-text">Group Participants: <span id="group_participants"></span></p>
-                    <p class="card-text">Category: <span id="category"></span></p>
-                    <p class="card-text">Reactions: <span id="reactions"></span></p>
+                <div class="card-header">
+                    Message metadata
+                </div>
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item">
+                        Date: <b><span id="message_date"></span></b>
+                    </li>
 
-                    <!--<p class="card-text">Translated Text: <span id="translated_text"></span></p>-->
-                    <p class="card-text">Message Date: <span id="message_date"></span></p>
-                    <p class="card-text">Keywords: <span id="keywords"></span></p>
+                </ul>
+                <div class="card-body">
+
+                    <p class="card-text">Group Name: <span id="group_name"></span> </p>
+                    <p class="card-text">Participants: <span id="group_participants"></span></p>
+                    <p class="card-text">Message sentiment: <span id="sentiment"></span></p>
+                    <p class="card-text">Reactions: <span id="reactions"></span></p>
                     <p class="card-text">Views: <span id="views"></span></p>
                     <p class="card-text">Forwards: <span id="forwards"></span></p>
-                    <p class="card-text">Source Link: <span id="source_link"></span></p>
-                    <p class="card-text">Duration in MS: <span id="duration"></span></p>
-                    <p class="card-text">Sentiment: <span id="sentiment"></span></p>
+                    <p class="card-text">Source Id: <span id="source_link"></span></p>
+                    <!--<p class="card-text">Category: <span id="category"></span></p>-->
+
+
+                    <!--<p class="card-text">Translated Text: <span id="translated_text"></span></p>-->
+
+                    <p class="card-text">Keywords: <span id="keywords"></span></p>
+
+                    <!--<p class="card-text">Duration in MS: <span id="duration"></span></p>-->
+
                     <p class="card-text">Entities: <span id="entities"></span></p>
-                    <p class="card-text">Media URL: <span id="media_url"></span></p>
-                    <p class="card-text">Item: <span id="item_number"></span></p>
+                    <!--<p class="card-text">Media URL: <span id="media_url"></span></p>-->
+
                 </div>
+
             </div>
             <br>
         </div>
+
+
+
+
+
+
     </div>
 
 </div>
-<br>
 
 <div class="container-fluid fixed-bottom" id="footer">
     <div class="row h3 bg-danger text-white mb-0">

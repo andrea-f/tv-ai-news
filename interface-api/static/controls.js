@@ -3,6 +3,7 @@ var maxTestLength = 80;
 var maxMessageLength = 420; // characters
 var timeoutId=null;
 
+
 function cancelTimeout() {
     try {
         clearTimeout(timeoutId);
@@ -13,16 +14,32 @@ function cancelTimeout() {
 function playNext() {
   cancelTimeout();
   var video = document.getElementById("video");
-  if (currentVideo < videos.length) {
-    currentVideo = currentVideo + 1;
+  if (currentVideo < videos.length-1) {
+    currentVideo += 1;
+    currentTotalVideoIndex += 1;
+    updateInfo();
+  } else {
+    // fetch new videos
+    window.location.href = nextVideosUrl + refb +"-"+ currentVideo;
   }
-  updateInfo();
+
+}
+
+function fetchNewVideos(url, callback) {
+    var xmlHttp = new XMLHttpRequest();
+    xmlHttp.onreadystatechange = function() {
+        if (xmlHttp.readyState == 4 && xmlHttp.status == 200)
+            callback(xmlHttp.responseText);
+    }
+    xmlHttp.open("GET", url, true); // true for asynchronous
+    xmlHttp.send(null);
 }
 
 function playPrev() {
  cancelTimeout();
  if (currentVideo>0) {
-    currentVideo = currentVideo - 1;
+    currentVideo -= 1;
+    currentTotalVideoIndex -= 1;
  }
   updateInfo();
 }
@@ -60,7 +77,7 @@ function updateInfo() {
   }
   document.getElementById("group_name").innerHTML = video.group_name;
   document.getElementById("group_participants").innerHTML = video.group_participants;
-  document.getElementById("category").innerHTML = video.category;
+  //document.getElementById("category").innerHTML = video.category;
   document.getElementById("reactions").innerHTML = video.reactions;
   document.getElementById("source_link").innerHTML = video.source_link;
   document.getElementById("text").innerHTML = formattedText;
@@ -69,12 +86,12 @@ function updateInfo() {
   document.getElementById("keywords").innerHTML = video.keywords.substring(0,maxTestLength);
   document.getElementById("views").innerHTML = video.views;
   document.getElementById("forwards").innerHTML = video.forwards;
-  document.getElementById("duration").innerHTML = video.duration;
+  //document.getElementById("duration").innerHTML = video.duration;
   document.getElementById("entities").innerHTML = video.entities;
   document.getElementById("sentiment").innerHTML = video.sentiment;
-  console.log("sent "+video.sentiment)
-  document.getElementById("item_number").innerHTML = currentVideo+"/"+videos.length;
-  document.getElementById("media_url").innerHTML = "<a href='"+video.media_url+"' target=_blank>"+video.media_url+"</a>";
+  //console.log("sent "+video.sentiment)
+  document.getElementById("item_number").innerHTML = currentTotalVideoIndex+"/"+totalItems;
+  //document.getElementById("media_url").innerHTML = "<a href='"+video.media_url+"' target=_blank>"+video.media_url+"</a>";
 }
 
 function setMediaElement(item) {
@@ -95,7 +112,12 @@ function setMediaElement(item) {
         videoElement.load();
         if (!isChannelPaused) {
             console.log("playing video")
-            videoElement.play();
+            var isPlaying = videoElement.currentTime > 0 && !videoElement.paused && !videoElement.ended
+                && videoElement.readyState > videoElement.HAVE_CURRENT_DATA;
+
+            if (!isPlaying) {
+              videoElement.play();
+            }
         } else {
             videoElement.pause();
         }
@@ -120,7 +142,7 @@ function sortBy(filter) {
         }
     });
     currentVideo=0;
+    currentTotalVideoIndex=0;
     updateInfo();
-    console.log(videos[0]);
 }
 

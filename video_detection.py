@@ -140,7 +140,7 @@ class VideoDetect:
 
             if response['JobStatus']=="IN_PROGRESS":
                 if not printed:
-                    print(response['JobStatus'], "labels")
+                    #print(response['JobStatus'], "labels")
                     printed = True
                 continue
 
@@ -316,7 +316,7 @@ class VideoDetect:
 
             if response['JobStatus']=="IN_PROGRESS":
                 if not printed:
-                    print(response['JobStatus'], "celebs")
+                    #print(response['JobStatus'], "celebs")
                     printed = True
                 continue
             try:
@@ -412,7 +412,7 @@ class VideoDetect:
             }
         )
         #print(response)
-        print("Created queue: %s" % sqsQueueName)
+        #print("Created queue: %s" % sqsQueueName)
 
     def DeleteTopicandQueue(self):
         self.sqs.delete_queue(QueueUrl=self.sqsQueueUrl)

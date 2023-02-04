@@ -67,6 +67,7 @@ class TelegramStats:
             if "signature" in message:
                 if not message["signature"] in self.unique_message_signatures:
                     self.messages.append(message)
+                    self.unique_message_signatures.append(message["signature"])
             # calculate sentiment
             try:
                 self.sentiments["items"][
@@ -106,11 +107,7 @@ class TelegramStats:
                     elif e["Type"] == "LOCATION" or e["Type"] == "ORGANIZATION":
                         self.process_item_and_store_refs(e["name"], message["signature"], "locations")
 
-
-
-
-
-        return message_json_file
+        return self.data
 
 
     def process_item_and_store_refs(self, word, signature, category):
