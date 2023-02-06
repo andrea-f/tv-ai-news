@@ -27,6 +27,7 @@ class TelegramTV:
             if "download_path" in message:
                 item = {
                     "group_name": group["name"],
+                    "group_id":message["peer_id"]["channel_id"],
                     "group_participants": group["participants_count"],
                     "group_icon": group["profile_photo"],
                     "category": group["category"],
@@ -39,7 +40,8 @@ class TelegramTV:
                     "s3_file_name": message["s3_file_name"],
                     "post_author": message["post_author"] if "post_author" in message and message["post_author"] else None,
                     "entities": message.get("entities_in_message", {}),
-                    "sentiment": message.get("sentiment", {})
+                    "sentiment": message.get("sentiment", {}),
+                    "signature": message["signature"]
                 }
                 keywords = []
                 unique_keywords = []

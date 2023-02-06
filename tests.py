@@ -1,5 +1,6 @@
 import os, sys, json
 import telegram_api
+import telegram_stats
 import media_analyser
 OUTPUT_FOLDER_MESSAGES = os.getenv("OUTPUT_FOLDER_MESSAGES", "../messages/")
 
@@ -21,3 +22,13 @@ class TestTelegramAPITV:
         )
 
         assert exists
+
+
+    def test_telegram_stats(self):
+        playlist_file_name = "./test-data/04-02-2023_18_02_17__groups_to_analyse__War in Ukraine__29.json__playlists.json__public.json"
+        playlist_file_name = "./test-data/04-02-2023_18_02_17__groups_to_analyse__War in Ukraine__29.json__playlists.json__public.json"
+        ts = telegram_stats.TelegramStats()
+        stats, sentiments = ts.calculate_stats_messages(playlist_file_name)
+        # print(json.dumps(stats,indent=4))
+        # print(json.dumps(sentiments,indent=4))
+        assert False

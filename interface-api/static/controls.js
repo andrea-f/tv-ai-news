@@ -2,12 +2,12 @@ var currentVideo = 0;
 var maxTestLength = 80;
 var maxMessageLength = 420; // characters
 var timeoutId=null;
-
+var IMAGE_SLIDESHOW_DURATION = 7000; // in millis
 
 function cancelTimeout() {
     try {
         clearTimeout(timeoutId);
-        console.log("cancel timeout")
+        //console.log("cancel timeout")
       } catch (err) {}
 }
 
@@ -56,7 +56,7 @@ function pause() {
         if (videos[currentVideo].media_url.indexOf(".jpg")==-1) {
             videoElement.play();
         } else {
-            timeoutId = setTimeout(function() { playNext(); }, 5000);
+            timeoutId = setTimeout(function() { playNext(); }, IMAGE_SLIDESHOW_DURATION);
         }
 
         isChannelPaused = false;
@@ -75,6 +75,21 @@ function updateInfo() {
   if (video.text.length > maxMessageLength) {
     formattedText = video.text.substring(0,maxMessageLength)+"...";
   }
+
+  var entities = video.entities;
+  if (video.entities.length > maxMessageLength) {
+    entities = video.entities.substring(0,maxMessageLength)+"...";
+  } else if (video.entities.length==0) {
+    entities = "None detected";
+  }
+
+  var keywords = video.keywords
+  if (video.keywords.length >maxMessageLength) {
+    keywords = video.keywords.substring(0,maxMessageLength)+"...";
+  } else if (video.keywords.length==0) {
+    keywords = "None detected";
+  }
+
   document.getElementById("group_name").innerHTML = video.group_name;
   document.getElementById("group_participants").innerHTML = video.group_participants;
   //document.getElementById("category").innerHTML = video.category;
@@ -83,7 +98,7 @@ function updateInfo() {
   document.getElementById("text").innerHTML = formattedText;
   //document.getElementById("translated_text").innerHTML = video.translated_text.substring(0,maxTestLength*5);
   document.getElementById("message_date").innerHTML = video.message_date;
-  document.getElementById("keywords").innerHTML = video.keywords.substring(0,maxTestLength);
+  document.getElementById("keywords").innerHTML = keywords;
   document.getElementById("views").innerHTML = video.views;
   document.getElementById("forwards").innerHTML = video.forwards;
   //document.getElementById("duration").innerHTML = video.duration;
@@ -101,21 +116,19 @@ function setMediaElement(item) {
         document.getElementById("media_element_img").src = item.media_url;
         videoElement.style.display = "none";
         if (!isChannelPaused) {
-            console.log("setting timer")
-            timeoutId = setTimeout(function() { playNext(); }, 5000);
+            //console.log("setting timer")
+            timeoutId = setTimeout(function() { playNext(); }, IMAGE_SLIDESHOW_DURATION);
         }
       } else if (item.media_url.indexOf(".pdf")==-1) {
 
         videoElement.style.display="block";
         document.getElementById("media_element").src = item.media_url;
         document.getElementById("media_element_img").style.display="none";
-        videoElement.load();
+        var isPlaying = videoElement.currentTime > 0 && !videoElement.paused && !videoElement.ended
+                        && videoElement.readyState > videoElement.HAVE_CURRENT_DATA;
         if (!isChannelPaused) {
-            console.log("playing video")
-            var isPlaying = videoElement.currentTime > 0 && !videoElement.paused && !videoElement.ended
-                && videoElement.readyState > videoElement.HAVE_CURRENT_DATA;
-
             if (!isPlaying) {
+              videoElement.load();
               videoElement.play();
             }
         } else {
