@@ -1,2 +1,4 @@
 /telethon2/
 bin
+__pycache__
+session-files

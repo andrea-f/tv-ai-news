@@ -126,17 +126,18 @@ function setMediaElement(item) {
         document.getElementById("media_element_img").style.display="none";
         var isPlaying = videoElement.currentTime > 0 && !videoElement.paused && !videoElement.ended
                         && videoElement.readyState > videoElement.HAVE_CURRENT_DATA;
-        if (!isChannelPaused) {
-            if (!isPlaying) {
-              videoElement.load();
-              videoElement.play();
-            }
+        try {
+            videoElement.load();
+        } catch (err) {
+            videoElement.play();
+        }
+        if (!isChannelPaused && !isPlaying) {
+            videoElement.play();
         } else {
             videoElement.pause();
         }
 
       }
-      //isChannelPaused = false;
 }
 
 

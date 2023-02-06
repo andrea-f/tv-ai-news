@@ -56,6 +56,8 @@ class TelegramAPI:
     def __init__(self):
         self.client = None
         self.tgtv = TelegramTV()
+        self.current_message_text = None
+        self.media_grouped_id = None
 
 
     def login_to_telegram(self, session_file=None):
@@ -316,10 +318,17 @@ class TelegramAPI:
         message_obj = message.to_dict()
 
         # get message date
-        message_obj['date'] = message.date.strftime("%m/%d/%Y, %H:%M:%S")
+        message_obj['date'] = message.date.strftime("%d/%m/%Y, %H:%M:%S")
+        if not self.media_grouped_id or self.media_grouped_id != message_obj["grouped_id"]:
+            self.media_grouped_id = message_obj["grouped_id"]
+            self.current_message_text = message_obj.get("message","")
+        elif len(message_obj.get("message",""))==0:
+            message_obj["message"] = self.current_message_text
 
         # get message signature
-        unique_str = "%s%s%s" % (message_obj.get("message", ""), message_obj['date'], message_obj["peer_id"]["channel_id"])
+        unique_str = "%s%s%s%s" % (
+            message_obj.get("id", ""),message_obj.get("message", ""), message_obj['date'], message_obj["peer_id"]["channel_id"]
+        )
         message_obj["signature"] = hashlib.md5(unique_str.encode('utf-8', errors="ignore")).hexdigest()
 
         # check if message has already been processed
@@ -363,7 +372,7 @@ class TelegramAPI:
             message_obj["original_message_language"] = language
             if not "en" == language:
                 translated_message = media_analyser.translate_text(message_obj["message"], language_source=language)
-                if len(translated_message)>0:
+                if translated_message and len(translated_message)>0:
                     message_obj["original_message"] = message_obj["message"]
                     message_obj["message"] = translated_message
 
