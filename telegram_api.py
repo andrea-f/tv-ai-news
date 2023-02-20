@@ -322,12 +322,18 @@ class TelegramAPI:
         if not self.media_grouped_id or self.media_grouped_id != message_obj["grouped_id"]:
             self.media_grouped_id = message_obj["grouped_id"]
             self.current_message_text = message_obj.get("message","")
+            self.count_grouped_message = 0
         elif len(message_obj.get("message",""))==0:
             message_obj["message"] = self.current_message_text
+            self.count_grouped_message +=1
 
         # get message signature
-        unique_str = "%s%s%s%s" % (
-            message_obj.get("id", ""),message_obj.get("message", ""), message_obj['date'], message_obj["peer_id"]["channel_id"]
+        unique_str = "%s%s%s%s%s" % (
+            self.count_grouped_message,
+            message_obj.get("id", ""),
+            message_obj.get("message", ""),
+            message_obj['date'],
+            message_obj["peer_id"]["channel_id"]
         )
         message_obj["signature"] = hashlib.md5(unique_str.encode('utf-8', errors="ignore")).hexdigest()
 
@@ -396,7 +402,7 @@ class TelegramAPI:
         if total_reactions:
             message_obj["total_reactions"] = total_reactions
 
-        local_messages_file_name, s3_messages_file_name = saver.save_media(message_obj, messages_fn, return_both=True, append=True)
+        local_messages_file_name, s3_messages_file_name = saver.save_media(message_obj, messages_fn)
         group["participants_count"], group["profile_photo"] = self._get_groups_participants_and_profile_image(group['id'])
         self.tgtv.generate_playlist(messages=[message_obj],group=group)
 
