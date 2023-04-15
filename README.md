@@ -69,5 +69,77 @@ The request to the state machine should be of this format:
 ```
 
 7. Run server to show TV interface: `python3 -m server 80`, then go to: http://127.0.0.1
+Documents and files for the interface are in `interface-api/server.py`
+There is a DNS record pointing to the flask server ECS service and can be accessed at: https://tv.cyber-monitor.com
+The server is run as an ECS task for a flask API: https://eu-west-1.console.aws.amazon.com/ecs/v2/clusters/telegram-interface/services/flask-api-3/health?region=eu-west-1
+The ECS task service definition is available here: https://eu-west-1.console.aws.amazon.com/ecs/v2/task-definitions/telegram-interface?status=ACTIVE?region=eu-west-1
+The container running in the service is from this image: 967979648201.dkr.ecr.eu-west-1.amazonaws.com/tv-interface:latest
 
+To deploy a new version of the code:
+```
+Retrieve an authentication token and authenticate your Docker client to your registry.
+Use the AWS CLI:
 
+aws ecr get-login-password --region eu-west-1 | docker login --username AWS --password-stdin 967979648201.dkr.ecr.eu-west-1.amazonaws.com
+Note: if you receive an error using the AWS CLI, make sure that you have the latest version of the AWS CLI and Docker installed.
+Build your Docker image using the following command. For information on building a Docker file from scratch, see the instructions here . You can skip this step if your image has already been built:
+
+docker build -t tv-interface .
+After the build is completed, tag your image so you can push the image to this repository:
+
+docker tag tv-interface:latest 967979648201.dkr.ecr.eu-west-1.amazonaws.com/tv-interface:latest
+Run the following command to push this image to your newly created AWS repository:
+
+docker push 967979648201.dkr.ecr.eu-west-1.amazonaws.com/tv-interface:latest
+```
+
+## Tests
+
+Run test to save groups to graphql: `python3 -m pytest tests.py -k test_save_group`
+
+## How to deploy changes
+
+To deploy changes to the fetching part of the algorithm: 
+1. edit the file 
+
+## Structure
+
+### Lambda functions used
+1. lambda function for ECS task: https://eu-west-1.console.aws.amazon.com/lambda/home?region=eu-west-1#/functions/telegram-tv-api-configure-ecs-task-input for ingestion
+2. lambda function for copying generated files and json playlist file from private bucket to public one used by Cloudfront CDN: https://eu-west-1.console.aws.amazon.com/lambda/home?region=eu-west-1#/functions/telegram-tv-api-public-playlist
+3. to avoid re processing messages this lambda function is used to copy messages into a unique signatures file: https://eu-west-1.console.aws.amazon.com/lambda/home?region=eu-west-1#/functions/unique-saved-messages?tab=code
+
+Input with groups to analyse for lambda function in 1.:
+```
+
+{
+  "selected_groups_file": "s3://telegram-output-data/groups_to_analyse__test.json"
+}
+```
+When the lambda function in 1. is executed the resutling output is:
+```
+{
+        'commands_telegram_api': commands_get_messages,
+        'commands_telegram_tv': commands_run_playlist_generation
+    }
+
+```
+
+The ECS task definition for the ingestion part is here: https://eu-west-1.console.aws.amazon.com/ecs/v2/task-definitions/telegram-api-tv/12/containers?region=eu-west-1
+The containers in the ECS task running the ingestion and ML operations on the data is: https://eu-west-1.console.aws.amazon.com/ecs/v2/task-definitions/telegram-api-tv/12/containers?region=eu-west-1
+The image running in the task can be updated by:
+```Retrieve an authentication token and authenticate your Docker client to your registry.
+   Use the AWS CLI:
+   
+   aws ecr get-login-password --region eu-west-1 | docker login --username AWS --password-stdin 967979648201.dkr.ecr.eu-west-1.amazonaws.com
+   Note: if you receive an error using the AWS CLI, make sure that you have the latest version of the AWS CLI and Docker installed.
+   Build your Docker image using the following command. For information on building a Docker file from scratch, see the instructions here . You can skip this step if your image has already been built:
+   
+   docker build -t telegram-api-tv .
+   After the build is completed, tag your image so you can push the image to this repository:
+   
+   docker tag telegram-api-tv:latest 967979648201.dkr.ecr.eu-west-1.amazonaws.com/telegram-api-tv:latest
+   Run the following command to push this image to your newly created AWS repository:
+   
+   docker push 967979648201.dkr.ecr.eu-west-1.amazonaws.com/telegram-api-tv:latest
+```

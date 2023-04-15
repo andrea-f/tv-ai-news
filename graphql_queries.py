@@ -1,6 +1,6 @@
 GROUP_CREATE_QUERY = """
 mutation createGroupMutation {
-  createGroup(input: {input}
+  createGroup(input: {input_data}
   ) {
     id
     name

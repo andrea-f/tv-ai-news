@@ -109,6 +109,7 @@ class TelegramAPI:
         try:
             c=0
             groups = client.get_dialogs()
+
             for group in groups:
 
                 name = group.name.replace("&", "e").replace("/","_")
@@ -136,11 +137,22 @@ class TelegramAPI:
                 # Download the group's profile photo and save it to a file
                 try:
                     file = client.download_profile_photo(channel_id, file=media_fn+profile_file_name)
-                except:
+                except Exception as e:
+                    print("Error in saving group %s image: %s" % (g["name"], e))
                     continue
-                g["profile_photo"]=saver.save_media(file_name=media_fn+profile_file_name, save_local_file=False)
+                local_photo_filename, g["profile_photo"]=saver.save_media(file_name=media_fn+profile_file_name, save_local_file=False)
+
+                # Save group info from graphql
+                try:
+                    saved_group = saver.save_media(data=g, data_type="group")
+                    print(json.dumps(saved_group, indent=4))
+                except Exception as e:
+                    print("Error in saving group %s to Graphql: %s" % (g["name"], e))
+                    traceback.print_exc()
+                    raise
+
                 print("group name: ", g['name'], c, len(groups))
-                groups_obj.append(g)
+                groups_obj.append(saved_group)
 
                 c+=1
         except Exception as e:

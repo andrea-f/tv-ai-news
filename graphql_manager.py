@@ -7,7 +7,7 @@ import base64
 from botocore.exceptions import ClientError
 from requests_aws_sign import AWSV4Sign
 import graphql_queries
-from aws_amplify_api.aws_amplify_api import AmplifyAPI
+#from aws_amplify_api.aws_amplify_api import AmplifyAPI
 
 # GRAPHQL_DATA_OUTPUT_FILE_PATH = "../graphql_output_data/listScanURLModels.json"
 # QUERY_FILTER = 'filter: {country: {contains: "Italy"}, check_results: {attributeExists: true}, scanURLModelIPInformationModelId: {attributeExists: true}}'
@@ -40,12 +40,12 @@ class GraphQLManager:
         except Exception as e:
             creds = {
                 "APPSYNC_URL": None,
-                "API_KEY": None
+                "api_key": None
             }
             print(e)
 
 
-        headers={"Content-Type": "application/json", "x-api-key": os.environ.get('API_KEY', creds['API_KEY'])}
+        headers={"Content-Type": "application/json", "x-api-key": os.environ.get('API_KEY', creds['api_key'])}
 
         endpoint = os.environ.get('APPSYNC_URL', creds['APPSYNC_URL'])
 

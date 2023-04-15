@@ -19,7 +19,7 @@ def date_format(message):
         return message.strftime("%Y-%m-%d %H:%M:%S")
 
 
-def save_media(data, file_name="", save_local_file=True, data_type=None):
+def save_media(data=None, file_name="", save_local_file=True, data_type=None):
     """
     Saves Media to localhost or S3
     :return:
@@ -56,7 +56,7 @@ def save_group(group:dict):
     group_input = {
         "id": group["entity"]["id"],
         "original_name_language": group["original_name_language"],
-        "participants": group["participants_count"],
+        "participants": group["entity"]["participants_count"],
         "platform_id": group["entity"]["id"],
         "platform_name": "telegram",
         "s3_profile_image": OUTPUT_DATA_BUCKET_NAME+"/"+group["profile_photo"],
@@ -67,8 +67,11 @@ def save_group(group:dict):
     }
     if "original_name" in group:
         group_input["original_name"] = group["original_name"]
-    query = graphql_queries.GROUP_CREATE_QUERY.format(
-        input=json.dumps(group_input, indent=4)
+    # query = graphql_queries.GROUP_CREATE_QUERY.format(
+    #     input_data=json.dumps(group_input, indent=4)
+    # )
+    query = graphql_queries.GROUP_CREATE_QUERY.replace(
+        '{input_data}',json.dumps(group_input, indent=4)
     )
     saved_group = graphql.send_graphql_query(query)
     return saved_group
@@ -120,7 +123,8 @@ def save_message(message:dict):
     # Missing saving keywords
     return saved_message
 
-def save_keyword(data):
+
+def save_keyword(data:dict):
     keyword_input = {
         "category": data["category"],
         "created_at": data["created_at"],
