@@ -93,6 +93,9 @@ Run the following command to push this image to your newly created AWS repositor
 docker push 967979648201.dkr.ecr.eu-west-1.amazonaws.com/tv-interface:latest
 ```
 
+To update the deployed code stop the `flask-api-3` service container: https://eu-west-1.console.aws.amazon.com/ecs/v2/clusters/telegram-interface/services/flask-api-3/configuration/a296a23d37944f0cbd5027fba041a3b8/configuration/containers/flask?region=eu-west-1
+It will be restarted automatically with the updated code.
+
 ## Tests
 
 Run test to save groups to graphql: `python3 -m pytest tests.py -k test_save_group`

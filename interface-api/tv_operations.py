@@ -1,5 +1,7 @@
 
 import json, os, sys
+import time
+
 import boto3
 from datetime import datetime
 
@@ -21,6 +23,7 @@ class TVOperations:
 
 
     def _process_video_list(self,video_list):
+        media_urls = []
         processed_video_list =[]
         for v in video_list:
             keywords = []
@@ -50,21 +53,35 @@ class TVOperations:
                 v["media_url"] = v["public_media_url"]
 
             # convert date to d/m/Y
-            try:
-                datetime.strptime(v["message_date"], '%d/%m/%Y, %H:%M:%S')
-            except:
-                date_pieces = v["message_date"].split("/")
-                v["message_date"] = "%s/%s/%s"% (date_pieces[1], date_pieces[0], date_pieces[2])
-            processed_video_list.append(v)
+            v = self._datetime_converter_to_timestamp(v)
+            if not v["public_media_url"] in media_urls:
+                processed_video_list.append(v)
+                media_urls.append(v["public_media_url"])
         video_list_by_date = sorted(
             processed_video_list,
-            key=lambda x: datetime.strptime(x["message_date"], '%d/%m/%Y, %H:%M:%S'),
+            key=lambda x: x["timestamp"],
             reverse=True
         )
+
+        print(json.dumps(video_list_by_date[0]["message_date"]))
 
         #video_list_by_reactions = sorted(processed_video_list,key=lambda x: x["reactions"], reverse=True)
         #return processed_video_list, video_list_by_date, video_list_by_reactions
         return video_list_by_date
+
+    def _datetime_converter_to_timestamp(self, v):
+        try:
+            v["timestamp"] = datetime.strptime(v["message_date"], '%d/%m/%Y, %H:%M:%S').timestamp()
+        except:
+            date_pieces = v["message_date"].split("/")
+            v["message_date"] = "%s/%s/%s"% (date_pieces[1], date_pieces[0], date_pieces[2])
+            v["timestamp"] = datetime.strptime(v["message_date"], '%d/%m/%Y, %H:%M:%S').timestamp()
+        date_now_timestamp = time.time()
+        if v["timestamp"] > int(date_now_timestamp):
+            date_pieces = v["message_date"].split("/")
+            v["message_date"] = "%s/%s/%s"% (date_pieces[1], date_pieces[0], date_pieces[2])
+            v["timestamp"] = datetime.strptime(v["message_date"], '%d/%m/%Y, %H:%M:%S').timestamp()
+        return v
 
 
     def _list_files_in_bucket(self,bucket_name, subfolder="playlists/", word_in_filename=None):

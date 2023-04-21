@@ -89,6 +89,7 @@ def index():
     playlist_metadata = get_playlist_items_from_file_name(playlists_file_name)
     batch_number = 0
     current_item=0
+
     return render_template('index.html',
                            video_list=processed_video_list,
                            batch_number=batch_number,

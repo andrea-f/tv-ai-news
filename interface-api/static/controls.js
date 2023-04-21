@@ -144,7 +144,7 @@ function setMediaElement(item) {
 function sortBy(filter) {
     cancelTimeout();
     videos.sort(function(a, b) {
-        if (filter == "message_date") {
+        if (filter == "timestamp") {
             return new Date(b[filter]) - new Date(a[filter]);
         } else {
             if (a[filter] < b[filter]) {
