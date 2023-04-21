@@ -22,8 +22,8 @@ playlists_file = "ukraine.json"
 
 received_requests = {}
 
-category = "ukraine"
-tv_ops = tv_operations.TVOperations(category)
+category_start = "ukraine"
+tv_ops = tv_operations.TVOperations(category_start)
 
 @app.before_request
 def check_ip():
@@ -85,7 +85,7 @@ def index():
     playlists_file_name, \
     total_items,\
     current_item, \
-    batch_number = tv_ops.get_processed_video_list(limit_returned_playlist_size=True, category=category)
+    batch_number = tv_ops.get_processed_video_list(limit_returned_playlist_size=True, category=category_start)
     playlist_metadata = get_playlist_items_from_file_name(playlists_file_name)
     batch_number = 0
     current_item=0
