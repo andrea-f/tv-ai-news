@@ -82,7 +82,8 @@ def index():
 
     # Calls tv operations
     processed_video_list, \
-    playlists_file_name, total_items,\
+    playlists_file_name, \
+    total_items,\
     current_item, \
     batch_number = tv_ops.get_processed_video_list(limit_returned_playlist_size=True, category=category)
     playlist_metadata = get_playlist_items_from_file_name(playlists_file_name)

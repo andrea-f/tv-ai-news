@@ -295,7 +295,7 @@ class TelegramAPI:
                 group["participants_count"], group["profile_photo"] = self._get_groups_participants_and_profile_image(group_id)
                 processed_groups.append(group)
 
-                local_file_name, s3_file_name = saver.save_media(processed_groups, group_file+"__processed.json", return_both=True)
+                saver.save_media(processed_groups, group_file+"__processed.json")
 
                 c+=1
         except Exception as e:
@@ -414,7 +414,7 @@ class TelegramAPI:
         if total_reactions:
             message_obj["total_reactions"] = total_reactions
 
-        local_messages_file_name, s3_messages_file_name = saver.save_media(message_obj, messages_fn)
+        saver.save_media(message_obj, messages_fn)
         group["participants_count"], group["profile_photo"] = self._get_groups_participants_and_profile_image(group['id'])
         self.tgtv.generate_playlist(messages=[message_obj],group=group)
 

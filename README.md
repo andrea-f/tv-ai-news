@@ -97,12 +97,14 @@ docker push 967979648201.dkr.ecr.eu-west-1.amazonaws.com/tv-interface:latest
 
 Run test to save groups to graphql: `python3 -m pytest tests.py -k test_save_group`
 
-## How to deploy changes
-
-To deploy changes to the fetching part of the algorithm: 
-1. edit the file 
-
 ## Structure
+
+The code structure of the algorithm follows this flow: 
+1. edit the file `telegram_api.py` is the entry point of the ETL application and takes arguments.
+2. once the messages have been downloaded and analysed (including media) for all the groups in the input, in the file `telegram_tv.py` `generate_playlist` method is called to generate a playlist
+3. after the playlist has been generated and saved to S3, the public playlist is created by calling `telegram_tv_public_playlist`  `lambda_handler` method to create the public playlist which copies the files to a CDN and saves the playlist file to S3
+
+
 
 ### Lambda functions used
 1. lambda function for ECS task: https://eu-west-1.console.aws.amazon.com/lambda/home?region=eu-west-1#/functions/telegram-tv-api-configure-ecs-task-input for ingestion

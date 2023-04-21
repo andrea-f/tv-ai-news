@@ -52,7 +52,6 @@ class LoadedPlaylistFile:
         self.already_existing_playlist_items = None
 
 
-
     def load(self, category):
         if not self.already_existing_playlist_items:
             try:
@@ -112,10 +111,11 @@ def lambda_handler(event, context=None):
     c = 1
     z = 0
     # Convert to threading
+    public_media_urls = []
     for message in playlist_json:
         new_public_file_name = hashlib.md5(message["s3_file_name"].encode('utf-8', errors="ignore")).hexdigest()+"."+message["s3_file_name"].split(".")[-1]
         public_media_url = CDN_PUBLIC_DOMAIN + "/" + new_public_file_name
-        #if not file_exists(new_public_file_name):
+        # if not file_exists
         if not new_public_file_name in files:
             copy_source = {
                 'Bucket': bucket_name,
@@ -129,12 +129,14 @@ def lambda_handler(event, context=None):
             #print("File %s/%s %s (%s) exists in %s" % (c, len(playlist_json), new_public_file_name, message["s3_file_name"], CDN_BUCKET_NAME))
 
         message["public_media_url"] = public_media_url
-
-        new_public_playlists.append(message)
+        if not public_media_url in public_media_urls:
+            new_public_playlists.append(message)
+            public_media_urls.append(public_media_url)
         c += 1
     #print("Didn't copy %s files in playlist because they were already in %s" % (z, CDN_BUCKET_NAME))
     #print("Processed %s messages in %s" % (len(playlist_json), s3_processed_file) )
 
+    # Save local and S3 public playlist location
     public_playlist_locations = just_playlist_filename+"__public.json"
     public_playlist_locations = public_playlist_locations.split("/")
     if "test" in just_playlist_filename:

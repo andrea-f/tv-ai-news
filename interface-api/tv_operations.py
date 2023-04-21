@@ -49,13 +49,19 @@ class TVOperations:
             if "public_media_url" in v:
                 v["media_url"] = v["public_media_url"]
 
+            # convert date to m/d/Y
+            try:
+                datetime.strptime(v["message_date"], '%m/%d/%Y, %H:%M:%S')
+            except:
+                date_pieces = v["message_date"].split("/")
+                v["message_date"] = "%s/%s/%s"% (date_pieces[1], date_pieces[0], date_pieces[2])
             processed_video_list.append(v)
-
         video_list_by_date = sorted(
             processed_video_list,
             key=lambda x: datetime.strptime(x["message_date"], '%m/%d/%Y, %H:%M:%S'),
             reverse=True
         )
+
         #video_list_by_reactions = sorted(processed_video_list,key=lambda x: x["reactions"], reverse=True)
         #return processed_video_list, video_list_by_date, video_list_by_reactions
         return video_list_by_date
