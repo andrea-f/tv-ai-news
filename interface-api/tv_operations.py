@@ -15,12 +15,12 @@ class TVOperations:
     """
 
     def __init__(self, category=None):
-        self.playlists_file_name = self.get_new_playlist_file_from_s3(category=category)
-        video_list_data_start = self.get_latest_playlist_file_contents_from_s3(self.playlists_file_name)
-        self.playlist = self.process_video_list(video_list_data_start)
+        self.playlists_file_name = self._get_new_playlist_file_from_s3(category=category)
+        video_list_data_start = self._get_latest_playlist_file_contents_from_s3(self.playlists_file_name)
+        self.playlist = self._process_video_list(video_list_data_start)
 
 
-    def process_video_list(self,video_list):
+    def _process_video_list(self,video_list):
         processed_video_list =[]
         for v in video_list:
             keywords = []
@@ -61,7 +61,7 @@ class TVOperations:
         return video_list_by_date
 
 
-    def list_files_in_bucket(self,bucket_name, subfolder="playlists/", word_in_filename=None):
+    def _list_files_in_bucket(self,bucket_name, subfolder="playlists/", word_in_filename=None):
         s3 = boto3.resource('s3')
         my_bucket = s3.Bucket(bucket_name)
         files = []
@@ -83,7 +83,7 @@ class TVOperations:
 
 
 
-    def get_s3_file(self,bucket_name, filename, save_dir=None):
+    def _get_s3_file(self,bucket_name, filename, save_dir=None):
         if not save_dir:
             save_dir = SAVE_DIR
         if not bucket_name:
@@ -99,8 +99,8 @@ class TVOperations:
                 file_contents = f.readlines()
             return file_contents
 
-    def get_new_playlist_file_from_s3(self,current_playlist_file=None, category=None):
-        files = self.list_files_in_bucket(OUTPUT_DATA_BUCKET_NAME, word_in_filename=category)
+    def _get_new_playlist_file_from_s3(self,current_playlist_file=None, category=None):
+        files = self._list_files_in_bucket(OUTPUT_DATA_BUCKET_NAME, word_in_filename=category)
         # Get latest playlist file
         playlists_file = files[0]
         if current_playlist_file and current_playlist_file==playlists_file:
@@ -108,9 +108,9 @@ class TVOperations:
         else:
             return playlists_file
 
-    def get_latest_playlist_file_contents_from_s3(self,playlists_file):
+    def _get_latest_playlist_file_contents_from_s3(self,playlists_file):
         print("Selected playlist file: %s" % playlists_file)
-        video_list_data = self.get_s3_file(OUTPUT_DATA_BUCKET_NAME, playlists_file)
+        video_list_data = self._get_s3_file(OUTPUT_DATA_BUCKET_NAME, playlists_file)
         print("Retrieved playslist file with %s items" % len(video_list_data))
         return video_list_data
 
@@ -133,14 +133,14 @@ class TVOperations:
 
 
     def get_processed_video_list(self, range_from=0,batch_number=0, limit_returned_playlist_size=False, category=None, force_refetch=False):
-        latest_playlists_file_name = self.get_new_playlist_file_from_s3(category=category)
+        latest_playlists_file_name = self._get_new_playlist_file_from_s3(category=category)
         if force_refetch:
             self.playlists_file_name = ""
         if latest_playlists_file_name != self.playlists_file_name:
             print("Fetching new playlist: %s" % latest_playlists_file_name)
             self.playlists_file_name = latest_playlists_file_name
-            video_list_data = self.get_latest_playlist_file_contents_from_s3(self.playlists_file_name)
-            self.playlist = self.process_video_list(video_list_data)
+            video_list_data = self._get_latest_playlist_file_contents_from_s3(self.playlists_file_name)
+            self.playlist = self._process_video_list(video_list_data)
         range_from = (MAX_PLAYLISTS_ITEMS_TO_RETURN_IN_BATCH * batch_number) + range_from
         total_items = len(self.playlist)
         if range_from > len(self.playlist)-1:

@@ -83,7 +83,7 @@ function updateInfo() {
     entities = "None detected";
   }
 
-  var keywords = video.keywords
+  var keywords = video.keywords;
   if (video.keywords.length >maxMessageLength) {
     keywords = video.keywords.substring(0,maxMessageLength)+"...";
   } else if (video.keywords.length==0) {

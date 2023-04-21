@@ -79,6 +79,8 @@ def get_playlist_items_from_file_name(playlists_file_name):
 
 @app.route('/')
 def index():
+
+    # Calls tv operations
     processed_video_list, \
     playlists_file_name, total_items,\
     current_item, \
@@ -100,9 +102,7 @@ def index():
 @app.route('/news/<string:category_input>/<string:filter>/<string:item_number>/')
 def get_next_videos(category_input, filter=None, item_number=None):
     print(category_input, filter, item_number)
-    if not filter:
-        filter = "live"
-    if "live" in filter:
+    if "live" in filter or not filter:
         try:
             item_numbers = item_number.split("-")
             batch_number = int(item_numbers[0])
@@ -117,7 +117,11 @@ def get_next_videos(category_input, filter=None, item_number=None):
         else:
             force_playlist_refetch=False
         print("Requested: %s-%s" % (batch_number, video_index))
-        processed_video_list, playlists_file_name,total_items, current_item, batch_number = tv_ops.get_processed_video_list(
+        processed_video_list, \
+        playlists_file_name,\
+        total_items, \
+        current_item, \
+        batch_number = tv_ops.get_processed_video_list(
             video_index, batch_number,
             limit_returned_playlist_size=True,
             category=category_input.replace("-", " "),
@@ -144,8 +148,8 @@ def send_media(path):
     d = "/".join(dir[:-1])
     p = dir[-1]
     d = "../media/%s" % d
-    print(path)
-    print(d, p)
+    #print(path)
+    #print(d, p)
     return send_from_directory(d, p)
 
 if __name__ == '__main__':
