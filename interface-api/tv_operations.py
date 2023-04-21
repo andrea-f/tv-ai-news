@@ -49,16 +49,16 @@ class TVOperations:
             if "public_media_url" in v:
                 v["media_url"] = v["public_media_url"]
 
-            # convert date to m/d/Y
+            # convert date to d/m/Y
             try:
-                datetime.strptime(v["message_date"], '%m/%d/%Y, %H:%M:%S')
+                datetime.strptime(v["message_date"], '%d/%m/%Y, %H:%M:%S')
             except:
                 date_pieces = v["message_date"].split("/")
                 v["message_date"] = "%s/%s/%s"% (date_pieces[1], date_pieces[0], date_pieces[2])
             processed_video_list.append(v)
         video_list_by_date = sorted(
             processed_video_list,
-            key=lambda x: datetime.strptime(x["message_date"], '%m/%d/%Y, %H:%M:%S'),
+            key=lambda x: datetime.strptime(x["message_date"], '%d/%m/%Y, %H:%M:%S'),
             reverse=True
         )
 

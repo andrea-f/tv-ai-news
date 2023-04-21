@@ -4,7 +4,7 @@ import json, os, sys
 import boto3
 
 OUTPUT_DATA_BUCKET_NAME = os.getenv("OUTPUT_DATA_BUCKET_NAME", "telegram-output-data")
-
+VERSION = "0.1.1"
 
 import tv_operations
 
@@ -95,7 +95,8 @@ def index():
                            playlist_date=playlist_metadata["playlist_date"],
                            category=playlist_metadata["category"],
                            total_items=total_items,
-                           current_item=current_item
+                           current_item=current_item,
+                           version=VERSION
                            )
 
 @app.route('/news/<string:category_input>')
@@ -103,7 +104,7 @@ def index():
 @app.route('/news/<string:category_input>/<string:filter>/<string:item_number>/')
 def get_next_videos(category_input, filter=None, item_number=None):
     print(category_input, filter, item_number)
-    if "live" in filter or not filter:
+    if not filter or (filter and "live" in filter):
         try:
             item_numbers = item_number.split("-")
             batch_number = int(item_numbers[0])

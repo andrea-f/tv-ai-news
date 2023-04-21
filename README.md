@@ -75,7 +75,7 @@ The server is run as an ECS task for a flask API: https://eu-west-1.console.aws.
 The ECS task service definition is available here: https://eu-west-1.console.aws.amazon.com/ecs/v2/task-definitions/telegram-interface?status=ACTIVE?region=eu-west-1
 The container running in the service is from this image: 967979648201.dkr.ecr.eu-west-1.amazonaws.com/tv-interface:latest
 
-To deploy a new version of the code:
+To deploy a new version of the server code:
 ```
 Retrieve an authentication token and authenticate your Docker client to your registry.
 Use the AWS CLI:
