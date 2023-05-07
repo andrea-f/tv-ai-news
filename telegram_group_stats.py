@@ -13,4 +13,3 @@ class TelegramGroupAnalysis:
             telegram_messages_data = json.load(f.read())
         return telegram_messages_data
 
-    def 

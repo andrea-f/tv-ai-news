@@ -69,27 +69,27 @@ class TelegramAPI:
             session_file = s3_operations.get_s3_file(OUTPUT_DATA_BUCKET_NAME, s3_session_file)
 
 
-    if not self.client:
-            token = 'bot token'
-            message = "Working..."
+        if not self.client:
+                token = 'bot token'
+                message = "Working..."
 
-            # creating a telegram session and assigning
-            # it to a variable client
-            client = TelegramClient(session_file, api_id, api_hash)
+                # creating a telegram session and assigning
+                # it to a variable client
+                client = TelegramClient(session_file, api_id, api_hash)
 
-            # connecting and building the session
-            client.connect()
+                # connecting and building the session
+                client.connect()
 
-            # in case of script ran first time it will
-            # ask either to input token or otp sent to
-            # number or sent or your telegram id
-            if not client.is_user_authorized():
+                # in case of script ran first time it will
+                # ask either to input token or otp sent to
+                # number or sent or your telegram id
+                if not client.is_user_authorized():
 
-                client.send_code_request(phone)
+                    client.send_code_request(phone)
 
-                # signing in the client
-                client.sign_in(phone, input('Enter the code: '))
-            return client
+                    # signing in the client
+                    client.sign_in(phone, input('Enter the code: '))
+                return client
 
 
     def send_message(self, client, message="Working!"):
