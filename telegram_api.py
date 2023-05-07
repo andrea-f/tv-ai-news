@@ -406,7 +406,7 @@ class TelegramAPI:
         if total_reactions:
             message_obj["total_reactions"] = total_reactions
 
-        saver.save_media(message_obj, messages_fn)
+        saver.save_media(message_obj, messages_fn, append=True)
         group["participants_count"], group["profile_photo"] = self._get_groups_participants_and_profile_image(group['id'])
         self.tgtv.generate_playlist(messages=[message_obj],group=group)
 
