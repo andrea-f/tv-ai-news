@@ -30,14 +30,14 @@ def save_media(data={}, file_name="", save_local_file=True, return_both=False, a
     if append and type(data) == dict:
         try:
             already_existing_messages = s3_operations.get_s3_file(OUTPUT_DATA_BUCKET_NAME, s3_file_name)
-            
+
             dont_add_to_message_file = False
-            if "id" in data.keys():
-                already_processed_message_ids = [d["id"] for d in already_existing_messages]
-                if data["id"] in already_processed_message_ids:
-                    dont_add_to_message_file = True
-            if not dont_add_to_message_file:
-                already_existing_messages.append(data)
+            #if "id" in data.keys():
+            #    already_processed_message_ids = [d["id"] for d in already_existing_messages]
+            #    if data["id"] in already_processed_message_ids:
+            #        dont_add_to_message_file = True
+            #if not dont_add_to_message_file:
+            already_existing_messages.append(data)
             data = already_existing_messages
         except Exception as e:
             print("Could not append to %s because: %s" % (s3_file_name, e))
