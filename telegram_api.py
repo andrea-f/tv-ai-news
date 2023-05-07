@@ -64,8 +64,12 @@ class TelegramAPI:
         # The first parameter is the .session file name (absolute paths allowed)
         if not session_file:
             session_file="session"
+        elif "s3://" in session_file:
+            s3_session_file = session_file.replace("s3://%s/"%OUTPUT_DATA_BUCKET_NAME,"")
+            session_file = s3_operations.get_s3_file(OUTPUT_DATA_BUCKET_NAME, s3_session_file)
 
-        if not self.client:
+
+    if not self.client:
             token = 'bot token'
             message = "Working..."
 
@@ -109,7 +113,6 @@ class TelegramAPI:
         try:
             c=0
             groups = client.get_dialogs()
-
             for group in groups:
 
                 name = group.name.replace("&", "e").replace("/","_")
@@ -137,22 +140,11 @@ class TelegramAPI:
                 # Download the group's profile photo and save it to a file
                 try:
                     file = client.download_profile_photo(channel_id, file=media_fn+profile_file_name)
-                except Exception as e:
-                    print("Error in saving group %s image: %s" % (g["name"], e))
+                except:
                     continue
-                local_photo_filename, g["profile_photo"]=saver.save_media(file_name=media_fn+profile_file_name, save_local_file=False)
-
-                # Save group info from graphql
-                try:
-                    saved_group = saver.save_media(data=g, data_type="group")
-                    print(json.dumps(saved_group, indent=4))
-                except Exception as e:
-                    print("Error in saving group %s to Graphql: %s" % (g["name"], e))
-                    traceback.print_exc()
-                    raise
-
+                g["profile_photo"]=saver.save_media(file_name=media_fn+profile_file_name, save_local_file=False)
                 print("group name: ", g['name'], c, len(groups))
-                groups_obj.append(saved_group)
+                groups_obj.append(g)
 
                 c+=1
         except Exception as e:
@@ -295,7 +287,7 @@ class TelegramAPI:
                 group["participants_count"], group["profile_photo"] = self._get_groups_participants_and_profile_image(group_id)
                 processed_groups.append(group)
 
-                saver.save_media(processed_groups, group_file+"__processed.json")
+                local_file_name, s3_file_name = saver.save_media(processed_groups, group_file+"__processed.json", return_both=True)
 
                 c+=1
         except Exception as e:
@@ -414,7 +406,7 @@ class TelegramAPI:
         if total_reactions:
             message_obj["total_reactions"] = total_reactions
 
-        saver.save_media(message_obj, messages_fn)
+        local_messages_file_name, s3_messages_file_name = saver.save_media(message_obj, messages_fn)
         group["participants_count"], group["profile_photo"] = self._get_groups_participants_and_profile_image(group['id'])
         self.tgtv.generate_playlist(messages=[message_obj],group=group)
 
@@ -484,5 +476,4 @@ if __name__ == "__main__":
     #     "max_past_date": "1/1/2023"
     # }]
     # tg.get_messages_from_groups(group_list=groups)
-
 

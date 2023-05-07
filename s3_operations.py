@@ -6,7 +6,7 @@ import os
 SAVE_DIR = os.getenv("SAVE_DIR", ".")
 
 
-def get_s3_file(bucket_name, filename, save_dir=None):
+def get_s3_file(bucket_name, filename, save_dir=None, return_file_contents=True):
     if not save_dir:
         save_dir = SAVE_DIR
     if not bucket_name:
@@ -15,12 +15,15 @@ def get_s3_file(bucket_name, filename, save_dir=None):
     s3_client = session.client("s3")
     filename_only = filename.split("/")[-1]
     s3_client.download_file(bucket_name, filename, "%s/%s" % (save_dir,filename_only))
-    with open("%s/%s" % (save_dir,filename_only), "r") as f:
-        if filename.endswith(".json"):
-            file_contents = json.loads(f.read())
-        elif filename.endswith(".csv"):
-            file_contents = f.readlines()
-        return file_contents
+    if return_file_contents:
+        with open("%s/%s" % (save_dir,filename_only), "r") as f:
+            if filename.endswith(".json"):
+                file_contents = json.loads(f.read())
+            elif filename.endswith(".csv"):
+                file_contents = f.readlines()
+            return file_contents
+    else:
+        return "%s/%s" % (save_dir,filename_only)
 
 
 def list_files_in_bucket(bucket_name, subfolder="full_scans/", word_in_filename=None):

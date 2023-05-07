@@ -115,7 +115,7 @@ def get_next_videos(category_input, filter=None, item_number=None):
         except:
             batch_number = 0
             video_index = 0
-        if "latest" in filter:
+        if filter and "latest" in filter:
             force_playlist_refetch=True
         else:
             force_playlist_refetch=False

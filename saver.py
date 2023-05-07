@@ -2,13 +2,13 @@ import json
 import datetime
 import os
 import s3_operations
-import graphql_manager
-import graphql_queries
+# import graphql_manager
+# import graphql_queries
 import traceback
 OUTPUT_DATA_BUCKET_NAME = os.getenv("OUTPUT_DATA_BUCKET_NAME", "telegram-output-data")
 SAVE_DIR = os.getenv("SAVE_DIR", "../messages")
 
-graphql = graphql_manager.GraphQLManager()
+# graphql = graphql_manager.GraphQLManager()
 
 def date_format(message):
     """
@@ -19,7 +19,37 @@ def date_format(message):
         return message.strftime("%Y-%m-%d %H:%M:%S")
 
 
-def save_media(data=None, file_name="", save_local_file=True, data_type=None):
+def save_media(data={}, file_name="", save_local_file=True, return_both=False, append=False):
+    """
+    Saves Media to localhost or S3
+    :return:
+    """
+    if "s3" in file_name:
+        file_name = file_name.replace("s3://"+OUTPUT_DATA_BUCKET_NAME+"/", SAVE_DIR+"/")
+    s3_file_name = file_name.replace("../", "").replace(SAVE_DIR+"/","")
+    if append and type(data) == dict:
+        try:
+            already_existing_messages = s3_operations.get_s3_file(OUTPUT_DATA_BUCKET_NAME, s3_file_name)
+            already_existing_messages.append(data)
+            data = already_existing_messages
+        except Exception as e:
+            print("Could not append to %s because: %s" % (s3_file_name, e))
+            data = [data]
+    if save_local_file:
+        file_name = save_local(data, file_name)
+    s3_file_path = s3_operations.save_file(OUTPUT_DATA_BUCKET_NAME, file_name, s3_file_name)
+    if save_local_file:
+        #print("Saved: %s and %s" % (file_name, "s3://"+OUTPUT_DATA_BUCKET_NAME+"/"+s3_file_path))
+        if not return_both:
+            return file_name
+        else:
+            return file_name, s3_file_path
+    else:
+        #print("Saved %s" % ("s3://"+OUTPUT_DATA_BUCKET_NAME+"/"+s3_file_path))
+        return s3_file_path
+
+
+def save_media_new(data=None, file_name="", save_local_file=True, data_type=None, save_graphql=False):
     """
     Saves Media to localhost or S3
     :return:
@@ -32,18 +62,18 @@ def save_media(data=None, file_name="", save_local_file=True, data_type=None):
             file_name = save_local(data, file_name)
         s3_file_path = s3_operations.save_file(OUTPUT_DATA_BUCKET_NAME, file_name, s3_file_name)
         return file_name, s3_file_path
-    if data_type and data:
-        try:
-            if data_type == "group":
-                saved_group = save_group(data)
-                return saved_group
-
-            elif data_type == "message":
-                saved_message = save_message(data)
-                return saved_message
-        except Exception as e:
-            print("Error in saving %s: %s" % (data_type, e))
-            traceback.print_exc()
+    #if data_type and data and save_graphql:
+    #    try:
+    #        if data_type == "group":
+    #            saved_group = save_group(data)
+    #            return saved_group
+    #
+    #        elif data_type == "message":
+    #            saved_message = save_message(data)
+    #            return saved_message
+    #    except Exception as e:
+    #        print("Error in saving %s: %s" % (data_type, e))
+    #        traceback.print_exc()
 
 
 

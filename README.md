@@ -132,7 +132,7 @@ When the lambda function in 1. is executed the resutling output is:
 
 The ECS task definition for the ingestion part is here: https://eu-west-1.console.aws.amazon.com/ecs/v2/task-definitions/telegram-api-tv/12/containers?region=eu-west-1
 The containers in the ECS task running the ingestion and ML operations on the data is: https://eu-west-1.console.aws.amazon.com/ecs/v2/task-definitions/telegram-api-tv/12/containers?region=eu-west-1
-The image running in the task can be updated by:
+The image and code for the ETL from Telegram running in the task can be updated by:
 ```Retrieve an authentication token and authenticate your Docker client to your registry.
    Use the AWS CLI:
    
